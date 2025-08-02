@@ -19,9 +19,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "cleanup.h"
-#include "fft.h"
-#include "snd.h"
-#include "hc.h"
+
+/* Forward declarations for module cleanup functions */
+extern void fft_cleanup(void);
+extern void snd_cleanup(void);
+extern void hc_cleanup(void);
 
 /* Flag to ensure cleanup only happens once */
 static int cleanup_done = 0;
