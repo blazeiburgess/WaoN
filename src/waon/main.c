@@ -266,277 +266,83 @@ int main (int argc, char** argv)
   extern double pitch_shift;
   extern int n_pitch;
 
-  char *file_midi = NULL;
-  char *file_wav = NULL;
-  char *file_patch = NULL;
-
   int i;
 
-  // default value
-  double cut_ratio; // log10 of cutoff ratio for scale velocity
-  cut_ratio = -5.0;
-  double rel_cut_ratio; // log10 of cutoff ratio relative to average
-  rel_cut_ratio = 1.0; // this value is ignored when abs_flg == 1
-  long len = 2048;
-  int flag_window = 3; // hanning window
-  /* for 76 keys piano  */
-  int notetop = 103; /* G8  */
-  int notelow = 28; /* E2  */
+  /* Initialize options structure */
+  waon_options_t opts;
+  waon_options_init(&opts);
 
-  abs_flg = 1;
+  /* Try to load default config files first (can be overridden by command line) */
+  load_default_configs(&opts);
 
-  long hop = 0;
-  int show_help = 0;
-  int show_version = 0;
-  adj_pitch = 0.0;
-  /* to select peaks in a note  */
-  int peak_threshold = 128; /* this means no peak search  */
+  /* Check if using old-style argument format first */
+  int using_legacy_args = 0;
+  for (i = 1; i < argc; i++) {
+    if (strncmp(argv[i], "-psub-", 6) == 0 || 
+        strcmp(argv[i], "-nophase") == 0 ||
+        strcmp(argv[i], "-oct") == 0 ||
+        (argv[i][0] == '-' && argv[i][1] != '-' && strlen(argv[i]) > 2)) {
+      using_legacy_args = 1;
+      break;
+    }
+  }
 
-  int flag_phase = 1; // use the phase correction
-  int psub_n = 0;
-  double psub_f = 0.0;
-  double oct_f = 0.0;
-  for (i = 1; i < argc; i++)
-    {
-      if ((strcmp (argv[i], "-input" ) == 0)
-	 || (strcmp (argv[i], "-i" ) == 0))
-	{
-	  if ( i+1 < argc )
-	    {
-	      file_wav = (char *)malloc (sizeof (char)
-					 * (strlen (argv[++i]) + 1));
-	      CHECK_MALLOC (file_wav, "main");
-	      strcpy (file_wav, argv[i]);
-	    }
-	  else
-	    {
-	      show_help = 1;
-	      break;
-	    }
-	}
-      else if ((strcmp (argv[i], "-output" ) == 0)
-	      || (strcmp (argv[i], "-o" ) == 0))
-	{
-	  if ( i+1 < argc )
-	    {
-	      file_midi = (char *)malloc (sizeof (char)
-					 * (strlen (argv[++i]) + 1));
-	      CHECK_MALLOC (file_midi, "main");
-	      strcpy (file_midi, argv[i]);
-	    }
-	  else
-	    {
-	      show_help = 1;
-	      break;
-	    }
-	}
-      else if ((strcmp (argv[i], "--cutoff") == 0)
-	       || (strcmp (argv[i], "-c") == 0))
-	{
-	  if ( i+1 < argc )
-	    {
-	      cut_ratio = atof (argv[++i]);
-	    }
-	  else
-	    {
-	      show_help = 1;
-	      break;
-	    }
-	}
-      else if ((strcmp (argv[i], "--top") == 0)
-	       || (strcmp (argv[i], "-t") == 0))
-	{
-	  if ( i+1 < argc )
-	    {
-	      notetop = atoi( argv[++i] );
-	    }
-	  else
-	    {
-	      show_help = 1;
-	      break;
-	    }
-	}
-      else if ((strcmp (argv[i], "--bottom") == 0)
-	       || (strcmp (argv[i], "-b") == 0))
-	{
-	  if ( i+1 < argc )
-	    {
-	      notelow = atoi (argv[++i]);
-	    }
-	  else
-	    {
-	      show_help = 1;
-	      break;
-	    }
-	}
-      else if ((strcmp (argv[i], "--window") == 0)
-	       || (strcmp (argv[i], "-w") == 0))
-	{
-	  if ( i+1 < argc )
-	    {
-	      flag_window = atoi (argv[++i]);
-	    }
-	  else
-	    {
-	      show_help = 1;
-	      break;
-	    }
-	}
-      else if ( strcmp (argv[i], "-n") == 0)
-	{
-	  if ( i+1 < argc )
-	    {
-	      len = atoi (argv[++i]);
-	    }
-	  else
-	    {
-	      show_help = 1;
-	      break;
-	    }
-	}
-      else if ((strcmp (argv[i], "--shift") == 0)
-	       || (strcmp (argv[i], "-s") == 0))
-	{
-	  if ( i+1 < argc )
-	    {
-	      hop = atoi (argv[++i]);
-	    }
-	  else
-	    {
-	      show_help = 1;
-	      break;
-	    }
-	}
-      else if ((strcmp (argv[i], "--patch") == 0)
-	       || (strcmp (argv[i], "-p") == 0))
-	{
-	  if ( i+1 < argc )
-	    {
-	      file_patch = argv[++i];
-	    }
-	  else
-	    {
-	      show_help = 1;
-	      break;
-	    }
-	}
-      else if ((strcmp (argv[i], "--relative") == 0)
-	       || (strcmp (argv[i], "-r") == 0))
-	{
-	  if ( i+1 < argc )
-	    {
-	      rel_cut_ratio = atof (argv[++i]);
-	      abs_flg = 0;
-	    }
-	  else
-	    {
-	      show_help = 1;
-	      break;
-	    }
-	}
-      else if ((strcmp (argv[i], "--peak") == 0)
-	       || (strcmp (argv[i], "-k") == 0))
-	{
-	  if ( i+1 < argc )
-	    {
-	      peak_threshold = atoi (argv[++i]);
-	    }
-	  else
-	    {
-	      show_help = 1;
-	      break;
-	    }
-	}
-      else if ((strcmp (argv[i], "--adjust") == 0)
-	       || (strcmp (argv[i], "-a") == 0))
-	{
-	  if ( i+1 < argc )
-	    {
-	      adj_pitch = atof (argv[++i]);
-	    }
-	  else
-	    {
-	      show_help = 1;
-	      break;
-	    }
-	}
-      else if ((strcmp (argv[i], "--help") == 0)
-	       || (strcmp (argv[i], "-h") == 0))
-	{
-	  show_help = 1;
-	  break;
-	}
-      else if (strcmp (argv[i], "-nophase") == 0)
-	{
-	  flag_phase = 0;
-	}
-      else if (strcmp (argv[i], "-psub-n") == 0)
-	{
-	  if ( i+1 < argc )
-	    {
-	      psub_n = atoi (argv[++i]);
-	    }
-	  else
-	    {
-	      show_help = 1;
-	      break;
-	    }
-	}
-      else if (strcmp (argv[i], "-psub-f") == 0)
-	{
-	  if ( i+1 < argc )
-	    {
-	      psub_f = atof (argv[++i]);
-	    }
-	  else
-	    {
-	      show_help = 1;
-	      break;
-	    }
-	}
-      else if (strcmp (argv[i], "-oct") == 0)
-	{
-	  if ( i+1 < argc )
-	    {
-	      oct_f = atof (argv[++i]);
-	    }
-	  else
-	    {
-	      show_help = 1;
-	      break;
-	    }
-	}
-      else if (strcmp (argv[i], "-v") == 0 ||
-	       strcmp (argv[i], "--version") == 0)
-	{
-	  show_version = 1;
-	}
-      else
-	{
-	  show_help = 1;
-	}
+  /* Parse arguments */
+  if (using_legacy_args) {
+    /* Use legacy parser for backward compatibility */
+    if (parse_legacy_args(argc, argv, &opts) < 0) {
+      print_usage(argv[0]);
+      waon_options_free(&opts);
+      exit(1);
     }
-  if (show_help == 1)
-    {
-      print_usage (argv[0]);
-      exit (1);
+  } else {
+    /* Use new getopt_long parser */
+    if (waon_parse_args(argc, argv, &opts) < 0) {
+      print_usage(argv[0]);
+      waon_options_free(&opts);
+      exit(1);
     }
-  else if (show_version == 1)
-    {
-      print_version ();
-      exit (1);
-    }
+  }
 
-  if (flag_window < 0 || flag_window > 6)
-    {
-      flag_window = 0;
+  /* Handle help and version */
+  if (opts.show_help) {
+    if (opts.show_help == 2) {
+      print_help_all();
+    } else {
+      print_usage(argv[0]);
     }
-  if (hop == 0)
-    {
-      hop = len / 4;
-    }
-  if (psub_n == 0) psub_f = 0.0;
-  if (psub_f == 0.0) psub_n = 0;
+    waon_options_free(&opts);
+    exit(0);
+  }
+  if (opts.show_version) {
+    print_version();
+    waon_options_free(&opts);
+    exit(0);
+  }
+
+  /* Validate and set defaults */
+  waon_options_validate(&opts);
+
+  /* Set global variables for compatibility with existing code */
+  abs_flg = opts.use_relative_cutoff ? 0 : 1;
+  adj_pitch = opts.pitch_adjust;
+
+  /* Local variables from options */
+  char *file_midi = opts.output_file;
+  char *file_wav = opts.input_file;
+  char *file_patch = opts.patch_file;
+  double cut_ratio = opts.cutoff_ratio;
+  double rel_cut_ratio = opts.relative_cutoff_ratio;
+  long len = opts.fft_size;
+  int flag_window = opts.window_type;
+  int notetop = opts.top_note;
+  int notelow = opts.bottom_note;
+  long hop = opts.hop_size;
+  int peak_threshold = opts.peak_threshold;
+  int flag_phase = opts.use_phase_vocoder;
+  int psub_n = opts.drum_removal_bins;
+  double psub_f = opts.drum_removal_factor;
+  double oct_f = opts.octave_removal_factor;
 
 
   struct WAON_notes *notes = WAON_notes_init();
@@ -673,6 +479,15 @@ int main (int argc, char** argv)
 	}
     }
 
+  /* Initialize progress bar if requested */
+  progress_bar_t *progress = NULL;
+  long total_frames = 0;
+  if (opts.show_progress && !opts.quiet) {
+    /* Estimate total frames from file info */
+    total_frames = sfinfo.frames / hop;
+    progress = progress_bar_init(total_frames, "Processing");
+  }
+
   /** main loop (icnt) **/
   pitch_shift = 0.0;
   n_pitch = 0;
@@ -699,7 +514,9 @@ int main (int argc, char** argv)
 			hop)
 	  != hop)
 	{
-	  fprintf (stderr, "WaoN : end of file.\n");
+	  if (!opts.quiet) {
+	    fprintf (stderr, "WaoN : end of file.\n");
+	  }
 	  break;
 	}
 
@@ -836,6 +653,11 @@ int main (int argc, char** argv)
        */
       WAON_notes_check (notes, icnt, vel, on_event,
 			8, 0, peak_threshold);
+
+      /* Update progress bar */
+      if (progress) {
+        progress_bar_update(progress, icnt);
+      }
     }
 
 
@@ -859,8 +681,10 @@ int main (int argc, char** argv)
    * here we assume 120 BPM, that is, 1 beat is 0.5 sec.
    * note: (hop / ft->rate) = duration for 1 step (sec) */
   long div = (long)(0.5 * (double)sfinfo.samplerate / (double) hop);
-  fprintf (stderr, "division = %ld\n", div);
-  fprintf (stderr, "WaoN : # of events = %d\n", notes->n);
+  if (!opts.quiet) {
+    fprintf (stderr, "division = %ld\n", div);
+    fprintf (stderr, "WaoN : # of events = %d\n", notes->n);
+  }
 
   WAON_notes_output_midi (notes, div, file_midi);
 
@@ -885,8 +709,14 @@ int main (int argc, char** argv)
 
   if (pmidi != NULL) free (pmidi);
 
-  if (file_wav  != NULL) free (file_wav);
-  if (file_midi != NULL) free (file_midi);
+  /* Clean up progress bar */
+  if (progress) {
+    progress_bar_finish(progress);
+    progress_bar_free(progress);
+  }
+
+  /* Note: file_wav and file_midi are now managed by opts structure */
+  waon_options_free(&opts);
 
   sf_close (sf);
 
