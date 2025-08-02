@@ -1,98 +1,60 @@
-# Prerequisites
-*.d
+# Build directories
+build/
+cmake-build-*/
+out/
 
-# Compiled Object files
-*.slo
-*.lo
+# CMake files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# Compiled object files
 *.o
+*.lo
 *.obj
 
-# Precompiled Headers
-*.gch
-*.pch
 
-# Compiled Dynamic libraries
+
+# Libraries
+*.a
+*.la
 *.so
 *.dylib
 *.dll
 
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
-
-# CMake
-CMakeCache.txt
-CMakeFiles/
-CMakeScripts/
-Testing/
-cmake_install.manifest
-compile_commands.json
-CTestTestfile.cmake
-_deps/
-build/
-out/
-install/
-
-# Make
-Makefile.in
-
-# Ninja
-.ninja_deps
-.ninja_log
-
-# Build directories
-[Bb]uild/
-[Dd]ebug/
-[Rr]elease/
-[Bb]in/
-[Oo]bj/
-[Ll]ib/
-cmake-build-debug
-
-# IDE files
-.vs/
+# Editor directories and files
 .vscode/
+.idea/
 *.swp
 *.swo
 *~
 .DS_Store
-.idea/
-*.iml
 
-# Dependency directories
-vendor/
-external/
-deps/
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
 
-# Generated files
-*.generated.*
-Generated/
-gen/
+# Testing
+Testing/
+CTestTestfile.cmake
 
-# Log files
-*.log
+# Documentation build
+docs/_build/
+docs/html/
 
 # Temporary files
-temp/
-tmp/
+*.tmp
+*.bak
+*.log
 
-# Coverage and testing
-*.gcno
-*.gcda
-*.gcov
-coverage/
+# OS generated files
+Thumbs.db
+.directory
 
-# Package files
-*.tar.gz
-*.zip
+# Project specific
+output.mid
+*.wav
+*.mid
