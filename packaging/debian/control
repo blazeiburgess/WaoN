@@ -1,0 +1,67 @@
+Source: waon
+Section: sound
+Priority: optional
+Maintainer: WaoN Development Team <kichiki@users.sourceforge.net>
+Build-Depends: debhelper (>= 10),
+               cmake (>= 3.10),
+               libfftw3-dev,
+               libsndfile1-dev,
+               libao-dev,
+               libsamplerate0-dev,
+               libgtk2.0-dev,
+               libncurses5-dev,
+               python3-dev,
+               pybind11-dev
+Standards-Version: 4.5.0
+Homepage: https://github.com/blazeiburgess/WaoN
+Vcs-Git: https://github.com/blazeiburgess/WaoN.git
+Vcs-Browser: https://github.com/blazeiburgess/WaoN
+
+Package: waon
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+         libfftw3-3,
+         libsndfile1,
+         libao4,
+         libsamplerate0,
+         libgtk2.0-0
+Description: Wave-to-Notes transcriber
+ WaoN is a Wave-to-Notes transcriber, a tool that converts audio files
+ (WAV format) into MIDI files by analyzing the frequency spectrum.
+ The name "WaoN" also means "harmony of notes" or "chord" in Japanese.
+ .
+ This package includes:
+  - waon: The core command-line transcriber
+  - pv: A phase vocoder for pitch shifting and time stretching
+  - gwaon: A GTK+ based GUI version of WaoN
+
+Package: libwaon0
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, ${misc:Depends},
+         libfftw3-3,
+         libsndfile1
+Description: WaoN shared library
+ This package contains the shared library for WaoN, which can be used
+ by other applications and language bindings.
+
+Package: libwaon-dev
+Architecture: any
+Section: libdevel
+Depends: libwaon0 (= ${binary:Version}),
+         ${misc:Depends},
+         libfftw3-dev,
+         libsndfile1-dev
+Description: WaoN development files
+ This package contains the development headers and static libraries
+ for building applications that use the WaoN library.
+
+Package: python3-waon
+Architecture: any
+Section: python
+Depends: ${python3:Depends}, ${shlibs:Depends}, ${misc:Depends},
+         libwaon0 (= ${binary:Version}),
+         python3-numpy
+Description: Python bindings for WaoN
+ This package contains Python 3 bindings for the WaoN library,
+ allowing Python programs to transcribe audio files to MIDI.
