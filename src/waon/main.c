@@ -46,6 +46,7 @@
 #include "cli.h"
 #include "config.h"
 #include "progress.h"
+#include "cleanup.h"
 
 
 /* These functions are now in cli.c, but we keep the declarations for compatibility */
@@ -267,6 +268,9 @@ int main (int argc, char** argv)
   extern int n_pitch;
 
   int i;
+
+  /* Register cleanup function to be called at exit */
+  waon_register_cleanup();
 
   /* Initialize options structure */
   waon_options_t opts;
