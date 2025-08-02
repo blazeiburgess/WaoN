@@ -130,13 +130,11 @@ jobs:
       run: |
         # Get pybind11 cmake directory
         export pybind11_DIR=$(python -c "import pybind11; print(pybind11.get_cmake_dir())")
+        echo "pybind11_DIR: ${pybind11_DIR}"
         
-        # Set Python root directory for CMake
-        if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-          export Python3_ROOT_DIR="${pythonLocation}"
-        elif [ "${{ matrix.os }}" == "macos-latest" ]; then
-          export Python3_ROOT_DIR="${pythonLocation}"
-        fi
+        # Set Python root directory for CMake (Python not Python3)
+        export Python_ROOT_DIR="${pythonLocation}"
+        echo "Python_ROOT_DIR: ${Python_ROOT_DIR}"
         
         cmake -B build \
           -DCMAKE_BUILD_TYPE=Release \
@@ -145,11 +143,13 @@ jobs:
           -DBUILD_WAON=OFF \
           -DBUILD_PV=OFF \
           -DBUILD_GWAON=OFF \
-          -DPython3_ROOT_DIR="${Python3_ROOT_DIR}" \
+          -DPython_ROOT_DIR="${Python_ROOT_DIR}" \
           -Dpybind11_DIR="${pybind11_DIR}"
         
         cmake --build build --config Release
-        cd python
+        
+        # Install from the build directory
+        cd build/python
         pip install -e .
 
     - name: Run Python tests
