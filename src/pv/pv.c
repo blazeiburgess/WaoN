@@ -187,7 +187,7 @@ int main (int argc, char** argv)
 	       || (strcmp (argv[i], "-v") == 0))
 	{
 	  print_pv_version ();
-	  exit (1);
+	  exit (0);
 	}
       else
 	{
