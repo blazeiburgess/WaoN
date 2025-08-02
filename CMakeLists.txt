@@ -42,6 +42,8 @@ find_library(MATH_LIB m)
 option(BUILD_WAON "Build waon executable" ON)
 option(BUILD_PV "Build pv executable" ON)
 option(BUILD_GWAON "Build gwaon executable" ON)
+option(BUILD_SHARED_LIB "Build shared library" OFF)
+option(BUILD_PYTHON_BINDINGS "Build Python bindings (requires BUILD_SHARED_LIB)" OFF)
 
 # Common source files
 set(COMMON_SOURCES
@@ -55,23 +57,23 @@ set(COMMON_SOURCES
     src/common/cleanup.h
 )
 
-# waon executable
-if(BUILD_WAON)
-    add_executable(waon
-        src/waon/main.c
+# Shared library
+if(BUILD_SHARED_LIB)
+    add_library(waon SHARED
+        src/lib/waon.c
+        src/lib/waon.h
         src/waon/notes.c
         src/waon/notes.h
         src/waon/midi.c
         src/waon/midi.h
         src/waon/analyse.c
         src/waon/analyse.h
-        src/waon/cli.c
-        src/waon/cli.h
-        src/waon/config.c
-        src/waon/config.h
-        src/waon/progress.c
-        src/waon/progress.h
         ${COMMON_SOURCES}
+    )
+    
+    target_include_directories(waon PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib>
+        $<INSTALL_INTERFACE:include>
     )
     
     target_include_directories(waon PRIVATE
@@ -95,6 +97,65 @@ if(BUILD_WAON)
     target_link_directories(waon PRIVATE
         ${FFTW3_LIBRARY_DIRS}
         ${SNDFILE_LIBRARY_DIRS}
+    )
+    
+    set_target_properties(waon PROPERTIES
+        VERSION ${PROJECT_VERSION}
+        SOVERSION ${PROJECT_VERSION_MAJOR}
+        PUBLIC_HEADER src/lib/waon.h
+    )
+    
+    # Install library
+    install(TARGETS waon
+        LIBRARY DESTINATION lib
+        PUBLIC_HEADER DESTINATION include
+    )
+endif()
+
+# waon executable
+if(BUILD_WAON)
+    add_executable(waon-exe
+        src/waon/main.c
+        src/waon/notes.c
+        src/waon/notes.h
+        src/waon/midi.c
+        src/waon/midi.h
+        src/waon/analyse.c
+        src/waon/analyse.h
+        src/waon/cli.c
+        src/waon/cli.h
+        src/waon/config.c
+        src/waon/config.h
+        src/waon/progress.c
+        src/waon/progress.h
+        ${COMMON_SOURCES}
+    )
+    
+    target_include_directories(waon-exe PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/common
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/waon
+        ${FFTW3_INCLUDE_DIRS}
+        ${SNDFILE_INCLUDE_DIRS}
+    )
+    
+    target_compile_options(waon-exe PRIVATE
+        ${FFTW3_CFLAGS_OTHER}
+        ${SNDFILE_CFLAGS_OTHER}
+    )
+    
+    target_link_libraries(waon-exe
+        ${FFTW3_LIBRARIES}
+        ${SNDFILE_LIBRARIES}
+        ${MATH_LIB}
+    )
+    
+    target_link_directories(waon-exe PRIVATE
+        ${FFTW3_LIBRARY_DIRS}
+        ${SNDFILE_LIBRARY_DIRS}
+    )
+    
+    set_target_properties(waon-exe PROPERTIES
+        OUTPUT_NAME waon
     )
 endif()
 
@@ -219,9 +280,22 @@ if(BUILD_GWAON)
 endif()
 
 # Installation
-install(TARGETS waon pv gwaon
-    RUNTIME DESTINATION bin
-)
+set(INSTALL_TARGETS)
+if(BUILD_WAON)
+    list(APPEND INSTALL_TARGETS waon-exe)
+endif()
+if(BUILD_PV)
+    list(APPEND INSTALL_TARGETS pv)
+endif()
+if(BUILD_GWAON)
+    list(APPEND INSTALL_TARGETS gwaon)
+endif()
+
+if(INSTALL_TARGETS)
+    install(TARGETS ${INSTALL_TARGETS}
+        RUNTIME DESTINATION bin
+    )
+endif()
 
 install(FILES docs/man/waon.1 docs/man/pv.1 docs/man/gwaon.1
     DESTINATION share/man/man1
@@ -233,3 +307,5 @@ message(STATUS "  Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "  Build waon: ${BUILD_WAON}")
 message(STATUS "  Build pv: ${BUILD_PV}")
 message(STATUS "  Build gwaon: ${BUILD_GWAON}")
+message(STATUS "  Build shared library: ${BUILD_SHARED_LIB}")
+message(STATUS "  Build Python bindings: ${BUILD_PYTHON_BINDINGS}")
