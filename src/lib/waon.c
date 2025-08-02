@@ -88,13 +88,11 @@ waon_error_t waon_init(void)
     return WAON_SUCCESS;
 }
 
-/* Cleanup library resources */
+/* Cleanup library resources - this is the public API function */
 void waon_cleanup(void)
 {
-    if (library_initialized) {
-        waon_cleanup();
-        library_initialized = 0;
-    }
+    /* No-op for now since cleanup is handled automatically via atexit */
+    /* This function exists for API compatibility */
 }
 
 /* Create a new WaoN context */
