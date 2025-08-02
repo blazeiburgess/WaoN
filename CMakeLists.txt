@@ -279,6 +279,14 @@ if(BUILD_GWAON)
     )
 endif()
 
+# Python bindings
+if(BUILD_PYTHON_BINDINGS)
+    if(NOT BUILD_SHARED_LIB)
+        message(FATAL_ERROR "Python bindings require BUILD_SHARED_LIB=ON")
+    endif()
+    add_subdirectory(python)
+endif()
+
 # Installation
 set(INSTALL_TARGETS)
 if(BUILD_WAON)
