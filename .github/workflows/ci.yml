@@ -107,9 +107,9 @@ jobs:
       run: |
         if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
           sudo apt-get update
-          sudo apt-get install -y libfftw3-dev libsndfile1-dev python3-dev libao-dev
+          sudo apt-get install -y libfftw3-dev libsndfile1-dev python3-dev libao-dev libsamplerate0-dev libgtk2.0-dev libncurses5-dev
         elif [ "${{ matrix.os }}" == "macos-latest" ]; then
-          brew install fftw libsndfile libao
+          brew install fftw libsndfile libao libsamplerate gtk+ ncurses
         fi
       shell: bash
 
