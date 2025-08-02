@@ -1,0 +1,81 @@
+# Maintainer: WaoN Development Team <kichiki@users.sourceforge.net>
+pkgname=('waon' 'libwaon' 'python-waon')
+pkgbase=waon
+pkgver=0.11
+pkgrel=1
+pkgdesc="Wave-to-Notes transcriber"
+arch=('x86_64')
+url="https://github.com/blazeiburgess/WaoN"
+license=('GPL2')
+makedepends=('cmake' 'fftw' 'libsndfile' 'libao' 'libsamplerate' 'gtk2' 'ncurses' 'python' 'pybind11' 'python-numpy')
+source=("$pkgbase-$pkgver.tar.gz::https://github.com/blazeiburgess/WaoN/archive/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+    cd "$srcdir/WaoN-$pkgver"
+    
+    cmake -B build \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DBUILD_WAON=ON \
+        -DBUILD_PV=ON \
+        -DBUILD_GWAON=ON \
+        -DBUILD_SHARED_LIB=ON \
+        -DBUILD_PYTHON_BINDINGS=ON
+    
+    cmake --build build
+}
+
+package_waon() {
+    pkgdesc="Wave-to-Notes transcriber - main programs"
+    depends=('fftw' 'libsndfile' 'libao' 'libsamplerate' 'gtk2' 'libwaon')
+    
+    cd "$srcdir/WaoN-$pkgver"
+    
+    # Install binaries
+    install -Dm755 build/waon "$pkgdir/usr/bin/waon"
+    install -Dm755 build/pv "$pkgdir/usr/bin/pv-waon"  # Rename to avoid conflict
+    install -Dm755 build/gwaon "$pkgdir/usr/bin/gwaon"
+    
+    # Install man pages
+    install -Dm644 docs/man/waon.1 "$pkgdir/usr/share/man/man1/waon.1"
+    install -Dm644 docs/man/pv.1 "$pkgdir/usr/share/man/man1/pv-waon.1"
+    install -Dm644 docs/man/gwaon.1 "$pkgdir/usr/share/man/man1/gwaon.1"
+    
+    # Install documentation
+    install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+    install -Dm644 docs/TIPS "$pkgdir/usr/share/doc/$pkgname/TIPS"
+    install -Dm644 docs/ChangeLog "$pkgdir/usr/share/doc/$pkgname/ChangeLog"
+    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
+
+package_libwaon() {
+    pkgdesc="Wave-to-Notes transcriber - shared library"
+    depends=('fftw' 'libsndfile')
+    
+    cd "$srcdir/WaoN-$pkgver"
+    
+    # Install library
+    install -Dm755 build/libwaon.so "$pkgdir/usr/lib/libwaon.so"
+    install -Dm644 src/lib/waon.h "$pkgdir/usr/include/waon.h"
+    
+    # Install license
+    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
+
+package_python-waon() {
+    pkgdesc="Wave-to-Notes transcriber - Python bindings"
+    depends=('python' 'python-numpy' 'libwaon')
+    
+    cd "$srcdir/WaoN-$pkgver/python"
+    
+    python setup.py install --root="$pkgdir" --optimize=1
+    
+    # Install examples
+    install -d "$pkgdir/usr/share/doc/$pkgname/examples"
+    install -m644 examples/*.py "$pkgdir/usr/share/doc/$pkgname/examples/"
+    
+    # Install documentation
+    install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+    install -Dm644 ../LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
