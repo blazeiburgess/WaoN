@@ -53,4 +53,9 @@ long sndfile_write (SNDFILE *sf, SF_INFO sfinfo,
 		    double * left, double * right,
 		    int len);
 
+/* cleanup function to free internal static buffer
+ * Call this at program exit to prevent memory leaks
+ */
+void snd_cleanup (void);
+
 #endif /* !_SND_H_ */

@@ -22,13 +22,16 @@
 
 #include "memory-check.h" // CHECK_MALLOC() macro
 
+/* Static buffer for sndfile_read */
+static double *buf = NULL;
+static int nbuf = 0;
+
 
 long sndfile_read (SNDFILE *sf, SF_INFO sfinfo,
 		   double * left, double * right,
 		   int len)
 {
-  static double *buf = NULL;
-  static int nbuf = 0;
+  /* buf and nbuf are now file-scope static variables */
 
   if (buf == NULL)
     {
@@ -412,5 +415,18 @@ long sndfile_write (SNDFILE *sf, SF_INFO sfinfo,
     }
 
   return ((long) status);
+}
+
+/* cleanup function to free internal static buffer
+ * Call this at program exit to prevent memory leaks
+ */
+void snd_cleanup (void)
+{
+  if (buf != NULL)
+    {
+      free (buf);
+      buf = NULL;
+      nbuf = 0;
+    }
 }
 
