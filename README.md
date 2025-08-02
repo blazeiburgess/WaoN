@@ -51,6 +51,16 @@ You can disable specific components:
 cmake -DBUILD_WAON=ON -DBUILD_PV=ON -DBUILD_GWAON=OFF ..
 ```
 
+To build with Python bindings:
+```bash
+cmake -DBUILD_SHARED_LIB=ON -DBUILD_PYTHON_BINDINGS=ON ..
+make
+
+# Install the Python package
+cd ../python
+pip install .
+```
+
 ## Usage
 
 ### Basic WAV to MIDI conversion:
@@ -75,6 +85,21 @@ pv --help
 gwaon --help
 ```
 
+### Python Usage:
+```python
+import waon
+
+# Simple transcription
+waon.transcribe_file("input.wav", "output.mid")
+
+# With custom options
+waon.transcribe_file("input.wav", "output.mid", 
+                    fft_size=4096, 
+                    cutoff=-4.0,
+                    note_bottom=36, 
+                    note_top=84)
+```
+
 ## Documentation
 
 - See `docs/TIPS.md` for usage tips and examples
@@ -89,7 +114,11 @@ waon/
 │   ├── common/      # Shared libraries (FFT, sound processing)
 │   ├── waon/        # Core transcriber application
 │   ├── pv/          # Phase vocoder application  
-│   └── gwaon/       # GTK+ GUI application
+│   ├── gwaon/       # GTK+ GUI application
+│   └── lib/         # Shared library for language bindings
+├── python/          # Python bindings
+│   ├── waon/        # Python package
+│   └── examples/    # Python examples
 ├── docs/            # Documentation and man pages
 ├── examples/        # Example files and scripts
 └── tests/           # Test suite
