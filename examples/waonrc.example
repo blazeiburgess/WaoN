@@ -1,0 +1,65 @@
+# Example WaoN configuration file
+# Copy this to ~/.waonrc to use as default settings
+
+[general]
+# Show progress bar during processing
+progress = 1
+
+# Suppress non-error output
+quiet = 0
+
+# Show detailed processing information
+verbose = 0
+
+[analysis]
+# FFT size (power of 2, typically 1024, 2048, 4096)
+fft-size = 2048
+
+# Hop size (shift between FFT windows)
+# If not specified, defaults to fft-size / 4
+hop-size = 512
+
+# Window function:
+# 0 = no window
+# 1 = parzen window
+# 2 = welch window
+# 3 = hanning window (default)
+# 4 = hamming window
+# 5 = blackman window
+# 6 = steeper 30-dB/octave rolloff window
+window = 3
+
+# Use phase vocoder correction (1 = yes, 0 = no)
+use-phase = 1
+
+[note-detection]
+# Log10 of cutoff ratio for velocity scaling
+cutoff = -5.0
+
+# Log10 of relative cutoff ratio (uncomment to use relative cutoff)
+# relative-cutoff = 1.0
+
+# Peak threshold for note-on detection (0-127, 128 = no peak search)
+peak-threshold = 128
+
+# Pitch adjustment in half-notes
+pitch-adjust = 0.0
+
+[range]
+# MIDI note range to analyze
+# Middle C (261 Hz) = C4 = MIDI 60
+top-note = 103    # G7
+bottom-note = 28  # E1
+
+[processing]
+# Drum removal settings
+# Number of averaging bins on each side
+drum-removal-bins = 0
+# Factor for drum removal
+drum-removal-factor = 0.0
+
+# Octave removal factor
+octave-removal = 0.0
+
+# Number of threads for batch processing
+threads = 1
