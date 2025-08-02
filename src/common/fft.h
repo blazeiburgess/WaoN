@@ -144,5 +144,11 @@ power_subtract_ave (int n, double *p, int m, double factor);
 void
 power_subtract_octave (int n, double *p, double factor);
 
+/* cleanup function to free internal static buffers
+ * Call this at program exit to prevent memory leaks
+ */
+void
+fft_cleanup (void);
+
 
 #endif /* !_FFT_H_ */

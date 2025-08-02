@@ -32,6 +32,14 @@
 
 #include "hc.h" // HC_to_amp2()
 
+/* Static buffers for power_subtract_ave */
+static double *ave = NULL;
+static int n_ave = 0;
+
+/* Static buffers for power_subtract_octave */
+static double *oct = NULL;
+static int n_oct = 0;
+
 
 /* Reference: "Numerical Recipes in C" 2nd Ed.
  * by W.H.Press, S.A.Teukolsky, W.T.Vetterling, B.P.Flannery
@@ -336,8 +344,7 @@ power_subtract_ave (int n, double *p, int m, double factor)
   int k;
   int nave;
 
-  static double *ave = NULL;
-  static int n_ave = 0;
+  /* ave and n_ave are now file-scope static variables */
   if (ave == NULL)
     {
       ave = (double *)malloc (sizeof (double) * nlen);
@@ -393,8 +400,7 @@ power_subtract_octave (int n, double *p, double factor)
   int i;
   int i2;
 
-  static double *oct = NULL;
-  static int n_oct = 0;
+  /* oct and n_oct are now file-scope static variables */
   if (oct == NULL)
     {
       oct = (double *)malloc (sizeof (double) * (n/2+1));
@@ -427,4 +433,27 @@ power_subtract_octave (int n, double *p, double factor)
     }
 
   //free (oct);
+}
+
+/* cleanup function to free internal static buffers
+ * Call this at program exit to prevent memory leaks
+ */
+void
+fft_cleanup (void)
+{
+  /* Free static buffers from power_subtract_ave */
+  if (ave != NULL)
+    {
+      free (ave);
+      ave = NULL;
+      n_ave = 0;
+    }
+
+  /* Free static buffers from power_subtract_octave */
+  if (oct != NULL)
+    {
+      free (oct);
+      oct = NULL;
+      n_oct = 0;
+    }
 }
