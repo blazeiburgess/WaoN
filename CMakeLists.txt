@@ -51,6 +51,8 @@ set(COMMON_SOURCES
     src/common/hc.h
     src/common/snd.c
     src/common/snd.h
+    src/common/cleanup.c
+    src/common/cleanup.h
 )
 
 # waon executable
