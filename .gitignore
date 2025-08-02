@@ -1,0 +1,98 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Testing/
+cmake_install.manifest
+compile_commands.json
+CTestTestfile.cmake
+_deps/
+build/
+out/
+install/
+
+# Make
+Makefile.in
+
+# Ninja
+.ninja_deps
+.ninja_log
+
+# Build directories
+[Bb]uild/
+[Dd]ebug/
+[Rr]elease/
+[Bb]in/
+[Oo]bj/
+[Ll]ib/
+cmake-build-debug
+
+# IDE files
+.vs/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+.idea/
+*.iml
+
+# Dependency directories
+vendor/
+external/
+deps/
+
+# Generated files
+*.generated.*
+Generated/
+gen/
+
+# Log files
+*.log
+
+# Temporary files
+temp/
+tmp/
+
+# Coverage and testing
+*.gcno
+*.gcda
+*.gcov
+coverage/
+
+# Package files
+*.tar.gz
+*.zip
