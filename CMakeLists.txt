@@ -63,6 +63,12 @@ if(BUILD_WAON)
         src/waon/midi.h
         src/waon/analyse.c
         src/waon/analyse.h
+        src/waon/cli.c
+        src/waon/cli.h
+        src/waon/config.c
+        src/waon/config.h
+        src/waon/progress.c
+        src/waon/progress.h
         ${COMMON_SOURCES}
     )
     
