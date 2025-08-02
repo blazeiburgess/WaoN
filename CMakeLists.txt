@@ -45,28 +45,30 @@ option(BUILD_GWAON "Build gwaon executable" ON)
 
 # Common source files
 set(COMMON_SOURCES
-    fft.c
-    fft.h
-    hc.c
-    hc.h
-    snd.c
-    snd.h
+    src/common/fft.c
+    src/common/fft.h
+    src/common/hc.c
+    src/common/hc.h
+    src/common/snd.c
+    src/common/snd.h
 )
 
 # waon executable
 if(BUILD_WAON)
     add_executable(waon
-        main.c
-        notes.c
-        notes.h
-        midi.c
-        midi.h
-        analyse.c
-        analyse.h
+        src/waon/main.c
+        src/waon/notes.c
+        src/waon/notes.h
+        src/waon/midi.c
+        src/waon/midi.h
+        src/waon/analyse.c
+        src/waon/analyse.h
         ${COMMON_SOURCES}
     )
     
     target_include_directories(waon PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/common
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/waon
         ${FFTW3_INCLUDE_DIRS}
         ${SNDFILE_INCLUDE_DIRS}
     )
@@ -91,27 +93,29 @@ endif()
 # pv executable
 if(BUILD_PV)
     add_executable(pv
-        pv.c
-        pv-complex.c
-        pv-complex.h
-        pv-conventional.c
-        pv-conventional.h
-        pv-ellis.c
-        pv-ellis.h
-        pv-freq.c
-        pv-freq.h
-        pv-loose-lock.c
-        pv-loose-lock.h
-        pv-nofft.c
-        pv-nofft.h
-        pv-complex-curses.c
-        pv-complex-curses.h
-        ao-wrapper.c
-        ao-wrapper.h
+        src/pv/pv.c
+        src/pv/pv-complex.c
+        src/pv/pv-complex.h
+        src/pv/pv-conventional.c
+        src/pv/pv-conventional.h
+        src/pv/pv-ellis.c
+        src/pv/pv-ellis.h
+        src/pv/pv-freq.c
+        src/pv/pv-freq.h
+        src/pv/pv-loose-lock.c
+        src/pv/pv-loose-lock.h
+        src/pv/pv-nofft.c
+        src/pv/pv-nofft.h
+        src/pv/pv-complex-curses.c
+        src/pv/pv-complex-curses.h
+        src/pv/ao-wrapper.c
+        src/pv/ao-wrapper.h
         ${COMMON_SOURCES}
     )
     
     target_include_directories(pv PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/common
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/pv
         ${FFTW3_INCLUDE_DIRS}
         ${SNDFILE_INCLUDE_DIRS}
         ${AO_INCLUDE_DIRS}
@@ -146,29 +150,33 @@ endif()
 # gwaon executable
 if(BUILD_GWAON)
     add_executable(gwaon
-        gwaon.c
-        gwaon-menu.c
-        gwaon-menu.h
-        gwaon-about.c
-        gwaon-about.h
-        gwaon-wav.c
-        gwaon-wav.h
-        gwaon-play.c
-        gwaon-play.h
-        pv-complex.c
-        pv-complex.h
-        pv-conventional.c
-        pv-conventional.h
-        ao-wrapper.c
-        ao-wrapper.h
-        gtk-color.c
-        gtk-color.h
-        midi.c
-        midi.h
+        src/gwaon/gwaon.c
+        src/gwaon/gwaon-menu.c
+        src/gwaon/gwaon-menu.h
+        src/gwaon/gwaon-about.c
+        src/gwaon/gwaon-about.h
+        src/gwaon/gwaon-wav.c
+        src/gwaon/gwaon-wav.h
+        src/gwaon/gwaon-play.c
+        src/gwaon/gwaon-play.h
+        src/pv/pv-complex.c
+        src/pv/pv-complex.h
+        src/pv/pv-conventional.c
+        src/pv/pv-conventional.h
+        src/pv/ao-wrapper.c
+        src/pv/ao-wrapper.h
+        src/gwaon/gtk-color.c
+        src/gwaon/gtk-color.h
+        src/waon/midi.c
+        src/waon/midi.h
         ${COMMON_SOURCES}
     )
     
     target_include_directories(gwaon PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/common
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/waon
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/pv
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/gwaon
         ${GTK2_INCLUDE_DIRS}
         ${FFTW3_INCLUDE_DIRS}
         ${SNDFILE_INCLUDE_DIRS}
@@ -207,7 +215,7 @@ install(TARGETS waon pv gwaon
     RUNTIME DESTINATION bin
 )
 
-install(FILES waon.1 pv.1 gwaon.1
+install(FILES docs/man/waon.1 docs/man/pv.1 docs/man/gwaon.1
     DESTINATION share/man/man1
 )
 
