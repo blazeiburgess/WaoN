@@ -14,54 +14,26 @@ endif()
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3")
 
-# Platform-specific dependency handling
-if(WIN32)
-    # On Windows, we'll use manual paths or vcpkg
-    # For now, we'll make these optional and let the user provide paths
-    message(WARNING "Windows build: Please ensure FFTW3, libsndfile, libao, libsamplerate are installed")
-    
-    # Set some reasonable defaults for Windows
-    set(FFTW3_FOUND FALSE)
-    set(SNDFILE_FOUND FALSE)
-    set(AO_FOUND FALSE)
-    set(SAMPLERATE_FOUND FALSE)
-    set(GTK2_FOUND FALSE)
-    set(CURSES_FOUND FALSE)
-    
-    # Try to find libraries manually
-    find_library(FFTW3_LIBRARIES NAMES fftw3 libfftw3)
-    find_library(SNDFILE_LIBRARIES NAMES sndfile libsndfile)
-    find_library(AO_LIBRARIES NAMES ao libao)
-    find_library(SAMPLERATE_LIBRARIES NAMES samplerate libsamplerate)
-    
-    if(FFTW3_LIBRARIES)
-        set(FFTW3_FOUND TRUE)
-    endif()
-    if(SNDFILE_LIBRARIES)
-        set(SNDFILE_FOUND TRUE)
-    endif()
-else()
-    # Find required packages using pkg-config on Unix-like systems
-    find_package(PkgConfig REQUIRED)
-    
-    # FFTW3
-    pkg_check_modules(FFTW3 REQUIRED fftw3)
-    
-    # libsndfile
-    pkg_check_modules(SNDFILE REQUIRED sndfile)
-    
-    # libao
-    pkg_check_modules(AO REQUIRED ao)
-    
-    # libsamplerate
-    pkg_check_modules(SAMPLERATE REQUIRED samplerate)
-    
-    # GTK+2.0 (for gwaon)
-    pkg_check_modules(GTK2 REQUIRED gtk+-2.0)
-    
-    # ncurses (for pv)
-    find_package(Curses REQUIRED)
-endif()
+# Find required packages
+find_package(PkgConfig REQUIRED)
+
+# FFTW3
+pkg_check_modules(FFTW3 REQUIRED fftw3)
+
+# libsndfile
+pkg_check_modules(SNDFILE REQUIRED sndfile)
+
+# libao
+pkg_check_modules(AO REQUIRED ao)
+
+# libsamplerate
+pkg_check_modules(SAMPLERATE REQUIRED samplerate)
+
+# GTK+2.0 (for gwaon)
+pkg_check_modules(GTK2 REQUIRED gtk+-2.0)
+
+# ncurses (for pv)
+find_package(Curses REQUIRED)
 
 # Math library
 find_library(MATH_LIB m)
@@ -72,25 +44,6 @@ option(BUILD_PV "Build pv executable" ON)
 option(BUILD_GWAON "Build gwaon executable" ON)
 option(BUILD_SHARED_LIB "Build shared library" OFF)
 option(BUILD_PYTHON_BINDINGS "Build Python bindings (requires BUILD_SHARED_LIB)" OFF)
-
-# Check dependencies and adjust build options
-if(NOT FFTW3_FOUND OR NOT SNDFILE_FOUND)
-    message(WARNING "FFTW3 or libsndfile not found - disabling all builds")
-    set(BUILD_WAON OFF)
-    set(BUILD_PV OFF)
-    set(BUILD_GWAON OFF)
-    set(BUILD_SHARED_LIB OFF)
-endif()
-
-if(BUILD_PV AND (NOT AO_FOUND OR NOT SAMPLERATE_FOUND OR NOT CURSES_FOUND))
-    message(WARNING "Dependencies for pv not found - disabling pv build")
-    set(BUILD_PV OFF)
-endif()
-
-if(BUILD_GWAON AND NOT GTK2_FOUND)
-    message(WARNING "GTK+2.0 not found - disabling gwaon build")
-    set(BUILD_GWAON OFF)
-endif()
 
 # Common source files
 set(COMMON_SOURCES
