@@ -86,7 +86,7 @@ waon_error_t waon_init(void)
 }
 
 /* Cleanup library resources - this is the public API function */
-void waon_cleanup(void)
+void waon_lib_cleanup(void)
 {
     /* No-op for now since cleanup is handled automatically via atexit */
     /* This function exists for API compatibility */

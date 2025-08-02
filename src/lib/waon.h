@@ -259,7 +259,7 @@ waon_error_t waon_init(void);
 /**
  * Cleanup library resources
  */
-void waon_cleanup(void);
+void waon_lib_cleanup(void);
 
 #ifdef __cplusplus
 }
