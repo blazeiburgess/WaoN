@@ -22,6 +22,11 @@
 #include <stdio.h> // fprintf()
 #include "memory-check.h" // CHECK_MALLOC() macro
 
+/* Static buffers for HC_complex_phase_vocoder */
+static double *tmp1 = NULL;
+static double *tmp2 = NULL;
+static int n0 = 0;
+
 
 /* return angle (arg) of the complex number (freq(k),freq(len-k));
  * where (real,imag) = (cos(angle), sin(angle)).
@@ -347,9 +352,7 @@ HC_complex_phase_vocoder (int len, const double *fs, const double *ft,
 			  const double *f_out_old, 
 			  double *f_out)
 {
-  static double *tmp1 = NULL;
-  static double *tmp2 = NULL;
-  static int n0 = 0;
+  /* tmp1, tmp2 and n0 are now file-scope static variables */
   if (tmp1 == NULL)
     {
       tmp1 = (double *)malloc (sizeof (double) * len);
@@ -377,4 +380,23 @@ HC_complex_phase_vocoder (int len, const double *fs, const double *ft,
 
   // f_out = X[t_i] (Y[u_{i-1}]/X[s_i]) / |Y[u_{i-1}]/X[s_i]|
   HC_mul (len, ft, tmp1, f_out);
+}
+
+/* cleanup function to free internal static buffers
+ * Call this at program exit to prevent memory leaks
+ */
+void
+hc_cleanup (void)
+{
+  if (tmp1 != NULL)
+    {
+      free (tmp1);
+      tmp1 = NULL;
+    }
+  if (tmp2 != NULL)
+    {
+      free (tmp2);
+      tmp2 = NULL;
+    }
+  n0 = 0;
 }

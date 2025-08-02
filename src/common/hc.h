@@ -144,5 +144,11 @@ HC_complex_phase_vocoder (int len, const double *fs, const double *ft,
 			  const double *f_out_old, 
 			  double *f_out);
 
+/* cleanup function to free internal static buffers
+ * Call this at program exit to prevent memory leaks
+ */
+void
+hc_cleanup (void);
+
 
 #endif /* !_HC_H_ */
