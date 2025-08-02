@@ -47,13 +47,24 @@ jobs:
     - name: Install dependencies
       run: ${{ matrix.dependencies_cmd }}
 
-    - name: Configure CMake
+    - name: Configure CMake (Unix)
+      if: matrix.os != 'windows-latest'
       run: |
         cmake -B build -G "${{ matrix.cmake_generator }}" \
           -DCMAKE_BUILD_TYPE=Release \
           -DBUILD_WAON=ON \
           -DBUILD_PV=ON \
-          -DBUILD_GWAON=${{ matrix.os != 'windows-latest' && 'ON' || 'OFF' }} \
+          -DBUILD_GWAON=ON \
+          -DBUILD_SHARED_LIB=ON
+
+    - name: Configure CMake (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        cmake -B build -G "${{ matrix.cmake_generator }}" `
+          -DCMAKE_BUILD_TYPE=Release `
+          -DBUILD_WAON=ON `
+          -DBUILD_PV=ON `
+          -DBUILD_GWAON=OFF `
           -DBUILD_SHARED_LIB=ON
 
     - name: Build
@@ -123,13 +134,7 @@ jobs:
 
     - name: Build and install Python bindings
       run: |
-        cmake -B build \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DBUILD_SHARED_LIB=ON \
-          -DBUILD_PYTHON_BINDINGS=ON \
-          -DBUILD_WAON=OFF \
-          -DBUILD_PV=OFF \
-          -DBUILD_GWAON=OFF
+        cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIB=ON -DBUILD_PYTHON_BINDINGS=ON -DBUILD_WAON=OFF -DBUILD_PV=OFF -DBUILD_GWAON=OFF
         cmake --build build --config Release
         cd python
         pip install -e .
