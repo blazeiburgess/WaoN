@@ -3,6 +3,9 @@ if(NOT BUILD_SHARED_LIB)
     message(FATAL_ERROR "Python bindings require BUILD_SHARED_LIB=ON")
 endif()
 
+# Enable C++ for this directory
+enable_language(CXX)
+
 # Find Python and pybind11
 find_package(Python COMPONENTS Interpreter Development REQUIRED)
 find_package(pybind11 REQUIRED)

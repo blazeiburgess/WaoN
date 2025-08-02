@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(WaoN VERSION 0.10 LANGUAGES C)
+project(WaoN VERSION 0.10 LANGUAGES C CXX)
 
 # Set C standard
 set(CMAKE_C_STANDARD 99)
