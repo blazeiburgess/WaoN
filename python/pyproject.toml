@@ -1,0 +1,67 @@
+[build-system]
+requires = [
+    "setuptools>=42",
+    "wheel",
+    "pybind11>=2.6.0",
+    "cmake>=3.12",
+    "numpy>=1.16.0"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "waon"
+dynamic = ["version"]
+description = "Python bindings for WaoN - Wave-to-Notes transcriber"
+readme = "../README.md"
+requires-python = ">=3.6"
+license = {text = "GPL-2.0-or-later"}
+authors = [
+    {name = "WaoN Development Team", email = "kichiki@users.sourceforge.net"}
+]
+keywords = ["audio", "midi", "transcription", "music", "signal-processing"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: C",
+    "Programming Language :: C++",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Sound/Audio :: Analysis",
+    "Topic :: Multimedia :: Sound/Audio :: Conversion",
+]
+dependencies = [
+    "numpy>=1.16.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=6.0",
+    "pytest-cov",
+    "soundfile",  # For testing with audio files
+]
+
+[project.urls]
+Homepage = "https://github.com/blazeiburgess/WaoN"
+Repository = "https://github.com/blazeiburgess/WaoN.git"
+"Bug Tracker" = "https://github.com/blazeiburgess/WaoN/issues"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.coverage.run]
+source = ["waon"]
+omit = ["*/tests/*", "*/test_*.py"]
