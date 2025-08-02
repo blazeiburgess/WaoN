@@ -59,47 +59,17 @@ set(COMMON_SOURCES
 
 # Shared library
 if(BUILD_SHARED_LIB)
-    # Only build shared library if we're not building executables that would conflict
-    if(NOT BUILD_WAON AND NOT BUILD_GWAON)
-        add_library(waon SHARED
-            src/lib/waon.c
-            src/lib/waon.h
-            src/waon/notes.c
-            src/waon/notes.h
-            src/waon/midi.c
-            src/waon/midi.h
-            src/waon/analyse.c
-            src/waon/analyse.h
-            ${COMMON_SOURCES}
-        )
-    else()
-        # When building executables too, create object libraries to share code
-        add_library(waon_objects OBJECT
-            src/waon/notes.c
-            src/waon/midi.c
-            src/waon/analyse.c
-            ${COMMON_SOURCES}
-        )
-        
-        target_include_directories(waon_objects PRIVATE
-            ${CMAKE_CURRENT_SOURCE_DIR}/src/common
-            ${CMAKE_CURRENT_SOURCE_DIR}/src/waon
-            ${FFTW3_INCLUDE_DIRS}
-            ${SNDFILE_INCLUDE_DIRS}
-        )
-        
-        target_compile_options(waon_objects PRIVATE
-            ${FFTW3_CFLAGS_OTHER}
-            ${SNDFILE_CFLAGS_OTHER}
-            -fPIC  # Ensure position independent code for shared library
-        )
-        
-        add_library(waon SHARED
-            src/lib/waon.c
-            src/lib/waon.h
-            $<TARGET_OBJECTS:waon_objects>
-        )
-    endif()
+    add_library(waon SHARED
+        src/lib/waon.c
+        src/lib/waon.h
+        src/waon/notes.c
+        src/waon/notes.h
+        src/waon/midi.c
+        src/waon/midi.h
+        src/waon/analyse.c
+        src/waon/analyse.h
+        ${COMMON_SOURCES}
+    )
     
     target_include_directories(waon PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib>
@@ -144,37 +114,22 @@ endif()
 
 # waon executable
 if(BUILD_WAON)
-    if(BUILD_SHARED_LIB AND TARGET waon_objects)
-        # Use the object library if it exists
-        add_executable(waon-exe
-            src/waon/main.c
-            src/waon/cli.c
-            src/waon/cli.h
-            src/waon/config.c
-            src/waon/config.h
-            src/waon/progress.c
-            src/waon/progress.h
-            $<TARGET_OBJECTS:waon_objects>
-        )
-    else()
-        # Build normally if no shared library
-        add_executable(waon-exe
-            src/waon/main.c
-            src/waon/notes.c
-            src/waon/notes.h
-            src/waon/midi.c
-            src/waon/midi.h
-            src/waon/analyse.c
-            src/waon/analyse.h
-            src/waon/cli.c
-            src/waon/cli.h
-            src/waon/config.c
-            src/waon/config.h
-            src/waon/progress.c
-            src/waon/progress.h
-            ${COMMON_SOURCES}
-        )
-    endif()
+    add_executable(waon-exe
+        src/waon/main.c
+        src/waon/notes.c
+        src/waon/notes.h
+        src/waon/midi.c
+        src/waon/midi.h
+        src/waon/analyse.c
+        src/waon/analyse.h
+        src/waon/cli.c
+        src/waon/cli.h
+        src/waon/config.c
+        src/waon/config.h
+        src/waon/progress.c
+        src/waon/progress.h
+        ${COMMON_SOURCES}
+    )
     
     target_include_directories(waon-exe PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/common
@@ -263,55 +218,28 @@ endif()
 
 # gwaon executable
 if(BUILD_GWAON)
-    if(BUILD_SHARED_LIB AND TARGET waon_objects)
-        # Use parts of the object library if it exists, but gwaon still needs midi.c directly
-        add_executable(gwaon
-            src/gwaon/gwaon.c
-            src/gwaon/gwaon-menu.c
-            src/gwaon/gwaon-menu.h
-            src/gwaon/gwaon-about.c
-            src/gwaon/gwaon-about.h
-            src/gwaon/gwaon-wav.c
-            src/gwaon/gwaon-wav.h
-            src/gwaon/gwaon-play.c
-            src/gwaon/gwaon-play.h
-            src/pv/pv-complex.c
-            src/pv/pv-complex.h
-            src/pv/pv-conventional.c
-            src/pv/pv-conventional.h
-            src/pv/ao-wrapper.c
-            src/pv/ao-wrapper.h
-            src/gwaon/gtk-color.c
-            src/gwaon/gtk-color.h
-            # Can't use object library here because it would duplicate midi.c
-            src/waon/midi.c
-            src/waon/midi.h
-            ${COMMON_SOURCES}
-        )
-    else()
-        add_executable(gwaon
-            src/gwaon/gwaon.c
-            src/gwaon/gwaon-menu.c
-            src/gwaon/gwaon-menu.h
-            src/gwaon/gwaon-about.c
-            src/gwaon/gwaon-about.h
-            src/gwaon/gwaon-wav.c
-            src/gwaon/gwaon-wav.h
-            src/gwaon/gwaon-play.c
-            src/gwaon/gwaon-play.h
-            src/pv/pv-complex.c
-            src/pv/pv-complex.h
-            src/pv/pv-conventional.c
-            src/pv/pv-conventional.h
-            src/pv/ao-wrapper.c
-            src/pv/ao-wrapper.h
-            src/gwaon/gtk-color.c
-            src/gwaon/gtk-color.h
-            src/waon/midi.c
-            src/waon/midi.h
-            ${COMMON_SOURCES}
-        )
-    endif()
+    add_executable(gwaon
+        src/gwaon/gwaon.c
+        src/gwaon/gwaon-menu.c
+        src/gwaon/gwaon-menu.h
+        src/gwaon/gwaon-about.c
+        src/gwaon/gwaon-about.h
+        src/gwaon/gwaon-wav.c
+        src/gwaon/gwaon-wav.h
+        src/gwaon/gwaon-play.c
+        src/gwaon/gwaon-play.h
+        src/pv/pv-complex.c
+        src/pv/pv-complex.h
+        src/pv/pv-conventional.c
+        src/pv/pv-conventional.h
+        src/pv/ao-wrapper.c
+        src/pv/ao-wrapper.h
+        src/gwaon/gtk-color.c
+        src/gwaon/gtk-color.h
+        src/waon/midi.c
+        src/waon/midi.h
+        ${COMMON_SOURCES}
+    )
     
     target_include_directories(gwaon PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/common
