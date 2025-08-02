@@ -8,7 +8,7 @@ find_package(Python COMPONENTS Interpreter Development REQUIRED)
 find_package(pybind11 REQUIRED)
 
 # Create Python module
-pybind11_add_module(_waon waon_bindings.cpp)
+pybind11_add_module(_waon ${CMAKE_CURRENT_SOURCE_DIR}/waon_bindings.cpp)
 
 # Link to the waon library
 target_link_libraries(_waon PRIVATE waon)
