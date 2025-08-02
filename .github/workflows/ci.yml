@@ -128,13 +128,17 @@ jobs:
 
     - name: Build and install Python bindings
       run: |
+        # Get Python executable path
+        PYTHON_EXECUTABLE=$(which python)
+        echo "Python executable: ${PYTHON_EXECUTABLE}"
+        
         # Get pybind11 cmake directory
         export pybind11_DIR=$(python -c "import pybind11; print(pybind11.get_cmake_dir())")
         echo "pybind11_DIR: ${pybind11_DIR}"
         
-        # Set Python root directory for CMake (Python not Python3)
-        export Python_ROOT_DIR="${pythonLocation}"
-        echo "Python_ROOT_DIR: ${Python_ROOT_DIR}"
+        # Set CMAKE_PREFIX_PATH to help find the correct Python
+        export CMAKE_PREFIX_PATH="${pythonLocation}:${CMAKE_PREFIX_PATH}"
+        echo "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}"
         
         cmake -B build \
           -DCMAKE_BUILD_TYPE=Release \
@@ -143,7 +147,9 @@ jobs:
           -DBUILD_WAON=OFF \
           -DBUILD_PV=OFF \
           -DBUILD_GWAON=OFF \
-          -DPython_ROOT_DIR="${Python_ROOT_DIR}" \
+          -DPython_EXECUTABLE="${PYTHON_EXECUTABLE}" \
+          -DPython_ROOT_DIR="${pythonLocation}" \
+          -DCMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH}" \
           -Dpybind11_DIR="${pybind11_DIR}"
         
         cmake --build build --config Release
