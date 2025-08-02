@@ -55,7 +55,7 @@ jobs:
           -DBUILD_WAON=ON \
           -DBUILD_PV=ON \
           -DBUILD_GWAON=ON \
-          -DBUILD_SHARED_LIB=ON
+          -DBUILD_SHARED_LIB=OFF
 
     - name: Configure CMake (Windows)
       if: matrix.os == 'windows-latest'
@@ -65,7 +65,7 @@ jobs:
           -DBUILD_WAON=ON `
           -DBUILD_PV=ON `
           -DBUILD_GWAON=OFF `
-          -DBUILD_SHARED_LIB=ON
+          -DBUILD_SHARED_LIB=OFF
 
     - name: Build
       run: cmake --build build --config Release
