@@ -40,11 +40,8 @@
 #include "memory-check.h"
 #include "cleanup.h"
 
-/* Global variables needed by analyse.c */
-int abs_flg = 1;
-double adj_pitch = 0.0;
-double pitch_shift = 0.0;
-int n_pitch = 0;
+/* Global variables are defined in their respective source files */
+/* We just include the headers that declare them as extern */
 
 /* Internal context structure */
 struct waon_context {
