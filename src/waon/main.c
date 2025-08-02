@@ -43,84 +43,219 @@
 #include "notes.h" // struct WAON_notes
 
 #include "VERSION.h"
+#include "cli.h"
+#include "config.h"
+#include "progress.h"
 
 
-void print_version (void)
+/* These functions are now in cli.c, but we keep the declarations for compatibility */
+extern void print_version(void);
+extern void print_usage(const char *program_name);
+
+/* Legacy argument parsing for backward compatibility */
+static int parse_legacy_args(int argc, char **argv, waon_options_t *opts)
 {
-  fprintf (stdout, "WaoN - a Wave-to-Notes transcriber, Version %s\n\n",
-	   WAON_VERSION);
-  fprintf (stdout, "Copyright (C) 1998-2007 Kengo Ichiki "
-	   "<kichiki@users.sourceforge.net>\n");
-  fprintf (stdout, "Web: http://waon.sourceforge.net/\n\n");
-}
-
-void print_usage (char * argv0)
-{
-  print_version ();
-  fprintf (stdout, "WaoN is a Wave-to-Notes transcriber,\n"
-	   "that is, a converter from sound file to midi file.\n\n");
-  fprintf (stdout, "Usage: %s [option ...]\n\n", argv0);
-  fprintf (stdout, "Options:\n");
-  fprintf (stdout, "  -h --help\tprint this help.\n");
-  fprintf (stdout, "  -v, --version\tprint version information.\n");
-  fprintf (stdout, "OPTIONS FOR FILES\n");
-  fprintf (stdout, "  -i --input\tinput wav file (default: stdin)\n");
-  fprintf (stdout, "  -o --output\toutput mid file"
-	   " (default: 'output.mid')\n");
-  fprintf (stdout, "\toptions -i and -o have argument '-' "
-	   "as stdin/stdout\n");
-  fprintf (stdout, "  -p --patch\tpatch file (default: no patch)\n");
-  fprintf (stdout, "FFT OPTIONS\n");
-  fprintf (stdout, "  -n\t\tsampling number from WAV in 1 step "
-	   "(default: 2048)\n");
-  fprintf (stdout, "  -w --window\t0 no window\n");
-  fprintf (stdout, "\t\t1 parzen window\n");
-  fprintf (stdout, "\t\t2 welch window\n");
-  fprintf (stdout, "\t\t3 hanning window (default)\n");
-  fprintf (stdout, "\t\t4 hamming window\n");
-  fprintf (stdout, "\t\t5 blackman window\n");
-  fprintf (stdout, "\t\t6 steeper 30-dB/octave rolloff window\n");
-  fprintf (stdout, "READING WAV OPTIONS\n");
-  fprintf (stdout, "  -s --shift\tshift number from WAV in 1 step\n");
-  fprintf (stdout, "\t\t(default: 1/4 of the value in -n option)\n");
-  fprintf (stdout, "PHASE-VOCODER OPTIONS\n");
-  fprintf (stdout, "  -nophase\tdon't use phase diff to improve freq estimation.\n"
-	   "\t\t(default: use the correction)\n");
-  fprintf (stdout, "NOTE SELECTION OPTIONS\n");
-  fprintf (stdout, "  -c --cutoff\tlog10 of cut-off ratio "
-	   "to scale velocity of note\n"
-	   "\t\t(default: -5.0)\n");
-  fprintf (stdout, "  -r --relative\tlog10 of cut-off ratio "
-	   "relative to the average.\n"
-	   "\t\t(default: no relative cutoff\n"
-	   "\t\t= absolute cutoff with the value in -c option)\n");
-  fprintf (stdout, "  -k --peak\tpeak threshold for note-on, "
-	   "which ranges [0,127]\n"
-	   "\t\t(default: 128 = no peak-search = "
-	   "search only first on-event)\n");
-  fprintf (stdout, "  -t --top\ttop note [midi #] "
-	   "(default: 103 = G7)\n");
-  fprintf (stdout, "  -b --bottom\tbottom note [midi #] "
-	   "(default: 28 = E1)\n");
-  fprintf (stdout, "\tHere middle C (261 Hz) = C4 = midi 60. "
-	   "Midi # ranges [0,127].\n");
-  fprintf (stdout, "  -a --adjust\tadjust-pitch param, "
-	   "which is suggested by WaoN after analysis.\n"
-	   "\t\tunit is half-note, that is, +1 is half-note up,\n"
-	   "\t\tand -0.5 is quater-note down. (default: 0)\n");
-  fprintf (stdout, "DRUM-REMOVAL OPTIONS\n");
-  fprintf (stdout, "  -psub-n\tnumber of averaging bins in one side.\n"
-	   "\t\tthat is, for n, (i-n,...,i,...,i+n) are averaged\n"
-	   "\t\t(default: 0)\n");
-  fprintf (stdout, "  -psub-f\tfactor to the average,"
-	   " where the power is modified as\n"
-	   "\t\tp[i] = (sqrt(p[i]) - f * sqrt(ave[i]))^2\n"
-	   "\t\t(default: 0.0)\n");
-  fprintf (stdout, "OCTAVE-REMOVAL OPTIONS\n");
-  fprintf (stdout, "  -oct\tfactor to the octave removal,"
-	   " where the power is modified as\n"
-	   "\t\tp[i] = (sqrt(p[i]) - f * sqrt(oct[i]))^2\n"
-	   "\t\t(default: 0.0)\n");
+  int i;
+  for (i = 1; i < argc; i++)
+    {
+      if ((strcmp (argv[i], "-input" ) == 0)
+	 || (strcmp (argv[i], "-i" ) == 0))
+	{
+	  if ( i+1 < argc )
+	    {
+	      opts->input_file = strdup(argv[++i]);
+	    }
+	  else
+	    {
+	      return -1;
+	    }
+	}
+      else if ((strcmp (argv[i], "-output" ) == 0)
+	      || (strcmp (argv[i], "-o" ) == 0))
+	{
+	  if ( i+1 < argc )
+	    {
+	      opts->output_file = strdup(argv[++i]);
+	    }
+	  else
+	    {
+	      return -1;
+	    }
+	}
+      else if ((strcmp (argv[i], "--cutoff") == 0)
+	       || (strcmp (argv[i], "-c") == 0))
+	{
+	  if ( i+1 < argc )
+	    {
+	      opts->cutoff_ratio = atof (argv[++i]);
+	    }
+	  else
+	    {
+	      return -1;
+	    }
+	}
+      else if ((strcmp (argv[i], "--top") == 0)
+	       || (strcmp (argv[i], "-t") == 0))
+	{
+	  if ( i+1 < argc )
+	    {
+	      opts->top_note = atoi( argv[++i] );
+	    }
+	  else
+	    {
+	      return -1;
+	    }
+	}
+      else if ((strcmp (argv[i], "--bottom") == 0)
+	       || (strcmp (argv[i], "-b") == 0))
+	{
+	  if ( i+1 < argc )
+	    {
+	      opts->bottom_note = atoi (argv[++i]);
+	    }
+	  else
+	    {
+	      return -1;
+	    }
+	}
+      else if ((strcmp (argv[i], "--window") == 0)
+	       || (strcmp (argv[i], "-w") == 0))
+	{
+	  if ( i+1 < argc )
+	    {
+	      opts->window_type = atoi (argv[++i]);
+	    }
+	  else
+	    {
+	      return -1;
+	    }
+	}
+      else if ( strcmp (argv[i], "-n") == 0)
+	{
+	  if ( i+1 < argc )
+	    {
+	      opts->fft_size = atoi (argv[++i]);
+	    }
+	  else
+	    {
+	      return -1;
+	    }
+	}
+      else if ((strcmp (argv[i], "--shift") == 0)
+	       || (strcmp (argv[i], "-s") == 0))
+	{
+	  if ( i+1 < argc )
+	    {
+	      opts->hop_size = atoi (argv[++i]);
+	    }
+	  else
+	    {
+	      return -1;
+	    }
+	}
+      else if ((strcmp (argv[i], "--patch") == 0)
+	       || (strcmp (argv[i], "-p") == 0))
+	{
+	  if ( i+1 < argc )
+	    {
+	      opts->patch_file = strdup(argv[++i]);
+	    }
+	  else
+	    {
+	      return -1;
+	    }
+	}
+      else if ((strcmp (argv[i], "--relative") == 0)
+	       || (strcmp (argv[i], "-r") == 0))
+	{
+	  if ( i+1 < argc )
+	    {
+	      opts->relative_cutoff_ratio = atof (argv[++i]);
+	      opts->use_relative_cutoff = 1;
+	    }
+	  else
+	    {
+	      return -1;
+	    }
+	}
+      else if ((strcmp (argv[i], "--peak") == 0)
+	       || (strcmp (argv[i], "-k") == 0))
+	{
+	  if ( i+1 < argc )
+	    {
+	      opts->peak_threshold = atoi (argv[++i]);
+	    }
+	  else
+	    {
+	      return -1;
+	    }
+	}
+      else if ((strcmp (argv[i], "--adjust") == 0)
+	       || (strcmp (argv[i], "-a") == 0))
+	{
+	  if ( i+1 < argc )
+	    {
+	      opts->pitch_adjust = atof (argv[++i]);
+	    }
+	  else
+	    {
+	      return -1;
+	    }
+	}
+      else if ((strcmp (argv[i], "--help") == 0)
+	       || (strcmp (argv[i], "-h") == 0))
+	{
+	  opts->show_help = 1;
+	  break;
+	}
+      else if (strcmp (argv[i], "-nophase") == 0)
+	{
+	  opts->use_phase_vocoder = 0;
+	}
+      else if (strcmp (argv[i], "-psub-n") == 0)
+	{
+	  if ( i+1 < argc )
+	    {
+	      opts->drum_removal_bins = atoi (argv[++i]);
+	    }
+	  else
+	    {
+	      return -1;
+	    }
+	}
+      else if (strcmp (argv[i], "-psub-f") == 0)
+	{
+	  if ( i+1 < argc )
+	    {
+	      opts->drum_removal_factor = atof (argv[++i]);
+	    }
+	  else
+	    {
+	      return -1;
+	    }
+	}
+      else if (strcmp (argv[i], "-oct") == 0)
+	{
+	  if ( i+1 < argc )
+	    {
+	      opts->octave_removal_factor = atof (argv[++i]);
+	    }
+	  else
+	    {
+	      return -1;
+	    }
+	}
+      else if (strcmp (argv[i], "-v") == 0 ||
+	       strcmp (argv[i], "--version") == 0)
+	{
+	  opts->show_version = 1;
+	}
+      else
+	{
+	  opts->show_help = 1;
+	}
+    }
+  return 0;
 }
 
 
