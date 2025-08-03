@@ -11,7 +11,9 @@ Build-Depends: debhelper (>= 10),
                libgtk2.0-dev,
                libncurses5-dev,
                python3-dev,
-               pybind11-dev
+               pybind11-dev,
+               python3-setuptools,
+               python3-numpy
 Standards-Version: 4.5.0
 Homepage: https://github.com/blazeiburgess/WaoN
 Vcs-Git: https://github.com/blazeiburgess/WaoN.git
