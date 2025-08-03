@@ -101,7 +101,7 @@ jobs:
           sudo apt-get install -y build-essential debhelper libfftw3-dev libsndfile1-dev libao-dev libsamplerate0-dev libgtk2.0-dev libncurses5-dev
         elif [ "${{ matrix.package_type }}" == "rpm" ]; then
           sudo apt-get update
-          sudo apt-get install -y rpm rpmbuild libfftw3-dev libsndfile1-dev libao-dev libsamplerate0-dev libgtk2.0-dev libncurses5-dev
+          sudo apt-get install -y rpm rpm-build libfftw3-dev libsndfile1-dev libao-dev libsamplerate0-dev libgtk2.0-dev libncurses5-dev
         elif [ "${{ matrix.package_type }}" == "arch" ]; then
           # For Arch, we'll use a Docker container
           sudo apt-get update
@@ -251,7 +251,6 @@ jobs:
       uses: ncipollo/release-action@v1
       with:
         allowUpdates: true
-        updateOnlyUnreleased: true
         artifacts: ${{ matrix.artifact_name }}
         artifactContentType: application/octet-stream
         token: ${{ secrets.GITHUB_TOKEN }}
@@ -280,7 +279,6 @@ jobs:
       uses: ncipollo/release-action@v1
       with:
         allowUpdates: true
-        updateOnlyUnreleased: true
         artifacts: "waon-${{ needs.create-release.outputs.version }}.tar.gz,waon-${{ needs.create-release.outputs.version }}.tar.xz"
         artifactContentType: application/gzip
         token: ${{ secrets.GITHUB_TOKEN }}
