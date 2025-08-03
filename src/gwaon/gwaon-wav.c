@@ -1718,7 +1718,7 @@ update_win_wav (GtkWidget *widget,
   // take pixbuf at this point (without texts)
   if (wav_pixbuf != NULL)
     {
-      gdk_pixbuf_unref (wav_pixbuf);
+      g_object_unref (wav_pixbuf);
     }
   wav_pixbuf = gdk_pixbuf_get_from_drawable (NULL, wav_pixmap, NULL,
 					     0, 0,
