@@ -58,3 +58,5 @@ Thumbs.db
 output.mid
 *.wav
 *.mid
+
+!packaging/rpm/waon.spec
