@@ -200,7 +200,7 @@ curses_print_pv (const char *file,
 {
   mvprintw (0, 0, "========== pv ==========");
   mvprintw (Y_file,   1, "file       : %s", file);
-  mvprintw (Y_frames, 1, "current    : %010ld / %010ld", 0, pv->sfinfo->frames);
+  mvprintw (Y_frames, 1, "current    : %010ld / %010ld", 0L, (long)pv->sfinfo->frames);
   mvprintw (Y_loop,   1, "loop       : %010ld - %010ld", frame0, frame1);
   //mvprintw (Y_pitch,  1, "pitch      : %-5.0f", pv_pitch);
   curses_print_pitch (pv_pitch);

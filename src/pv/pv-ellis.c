@@ -127,7 +127,6 @@ void pv_ellis (const char *file, const char *outfile,
   CHECK_MALLOC (right, "pv_ellis");
 
   // prepare the output
-  int status;
   ao_device *ao = NULL;
   SNDFILE *sfout = NULL;
   SF_INFO sfout_info;
@@ -420,8 +419,8 @@ void pv_ellis (const char *file, const char *outfile,
 				 ao, sfout, &sfout_info,
 				 flag_pitch);
       */
-      status = pv_play_resample (hop_res, hop_syn, l_out, r_out,
-				 ao, sfout, &sfout_info);
+      pv_play_resample (hop_res, hop_syn, l_out, r_out,
+			ao, sfout, &sfout_info);
       // note here hop_syn is set equal to hop_syn, so give the correct one
 
 
@@ -447,7 +446,7 @@ void pv_ellis (const char *file, const char *outfile,
   else
     {
       // frames left in l_out[] and r_out[]
-      status = sndfile_write (sfout, sfout_info, l_out, r_out, len);
+      sndfile_write (sfout, sfout_info, l_out, r_out, len);
       sf_write_sync (sfout);
       sf_close (sfout);
     }
