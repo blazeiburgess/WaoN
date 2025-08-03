@@ -73,10 +73,12 @@ allowing Python programs to transcribe audio files to MIDI.
 %install
 %cmake_install
 
-# Install Python module
-cd python
+# Install Python module using CMake-configured setup.py
+# Copy README.md to avoid path access issues
+cp README.md %{_vpath_builddir}/
+cd %{_vpath_builddir}/python
 %py3_install
-cd ..
+cd ../..
 
 # Install man pages
 mkdir -p %{buildroot}%{_mandir}/man1
