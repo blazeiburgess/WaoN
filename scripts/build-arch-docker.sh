@@ -31,8 +31,9 @@ chown -R builder:builder /home/builder/waon
 echo "Updating PKGBUILD version to ${VERSION}..."
 cd /home/builder/waon
 sed -i "s/pkgver=.*/pkgver=${VERSION}/" packaging/arch/PKGBUILD
-# Remove source line since we're building from local files
+# Remove source and sha256sums since we're building from local files
 sed -i 's/source=.*/source=()/' packaging/arch/PKGBUILD
+sed -i 's/sha256sums=.*/sha256sums=()/' packaging/arch/PKGBUILD
 
 # Build package as builder user
 echo "Building package..."
