@@ -1,0 +1,285 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      version: ${{ steps.get_version.outputs.version }}
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for changelog
+
+    - name: Get version
+      id: get_version
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+    - name: Generate changelog
+      id: changelog
+      run: |
+        # Use the existing changelog generation script if available
+        if [ -f scripts/generate-changelog.sh ]; then
+          bash scripts/generate-changelog.sh > CHANGELOG_FORMATTED.md
+        else
+          # Generate changelog from git history
+          echo "# Changelog" > CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          
+          # Get commits since last tag
+          LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -z "$LAST_TAG" ]; then
+            git log --pretty=format:"- %s (%h)" >> CHANGELOG.md
+          else
+            git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" >> CHANGELOG.md
+          fi
+          
+          # Group by category
+          echo "## Features" > CHANGELOG_FORMATTED.md
+          grep -E "^- (feat|feature):" CHANGELOG.md | sed 's/^- feat[ure]*: /- /' >> CHANGELOG_FORMATTED.md || echo "No new features" >> CHANGELOG_FORMATTED.md
+          
+          echo -e "\n## Bug Fixes" >> CHANGELOG_FORMATTED.md
+          grep -E "^- (fix|bugfix):" CHANGELOG.md | sed 's/^- \(fix\|bugfix\): /- /' >> CHANGELOG_FORMATTED.md || echo "No bug fixes" >> CHANGELOG_FORMATTED.md
+          
+          echo -e "\n## Other Changes" >> CHANGELOG_FORMATTED.md
+          grep -vE "^- (feat|feature|fix|bugfix):" CHANGELOG.md >> CHANGELOG_FORMATTED.md || echo "No other changes" >> CHANGELOG_FORMATTED.md
+        fi
+
+    - name: Create Release
+      id: create_release
+      uses: ncipollo/release-action@v1
+      with:
+        bodyFile: CHANGELOG_FORMATTED.md
+        draft: false
+        prerelease: false
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+  build-packages:
+    name: Build ${{ matrix.package_type }} package
+    needs: create-release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            package_type: debian
+            artifact_name: waon_${{ needs.create-release.outputs.version }}_amd64.deb
+          - os: ubuntu-latest
+            package_type: rpm
+            artifact_name: waon-${{ needs.create-release.outputs.version }}-1.x86_64.rpm
+          - os: ubuntu-latest
+            package_type: arch
+            artifact_name: waon-${{ needs.create-release.outputs.version }}-1-x86_64.pkg.tar.zst
+          - os: macos-latest
+            package_type: macos
+            artifact_name: WaoN-${{ needs.create-release.outputs.version }}.dmg
+          # Temporarily disable Windows until dependencies are sorted out
+          #- os: windows-latest
+          #  package_type: windows
+          #  artifact_name: WaoN-${{ needs.create-release.outputs.version }}-setup.exe
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        if [ "${{ matrix.package_type }}" == "debian" ]; then
+          sudo apt-get update
+          sudo apt-get install -y build-essential debhelper libfftw3-dev libsndfile1-dev libao-dev libsamplerate0-dev libgtk2.0-dev libncurses5-dev
+        elif [ "${{ matrix.package_type }}" == "rpm" ]; then
+          sudo apt-get update
+          sudo apt-get install -y rpm rpmbuild libfftw3-dev libsndfile1-dev libao-dev libsamplerate0-dev libgtk2.0-dev libncurses5-dev
+        elif [ "${{ matrix.package_type }}" == "arch" ]; then
+          # For Arch, we'll use a Docker container
+          sudo apt-get update
+          sudo apt-get install -y docker.io
+        elif [ "${{ matrix.package_type }}" == "macos" ]; then
+          brew install fftw libsndfile libao libsamplerate gtk+ ncurses create-dmg
+        elif [ "${{ matrix.package_type }}" == "windows" ]; then
+          choco install nsis
+        fi
+      shell: bash
+
+    - name: Build package
+      env:
+        VERSION: ${{ needs.create-release.outputs.version }}
+      run: |
+        if [ "${{ matrix.package_type }}" == "debian" ]; then
+          # Build Debian package using existing packaging files
+          # Update changelog with new version
+          echo "waon ($VERSION-1) unstable; urgency=medium" > packaging/debian/changelog.new
+          echo "" >> packaging/debian/changelog.new
+          echo "  * Release version $VERSION" >> packaging/debian/changelog.new
+          echo "" >> packaging/debian/changelog.new
+          echo " -- GitHub Actions <actions@github.com>  $(date -R)" >> packaging/debian/changelog.new
+          echo "" >> packaging/debian/changelog.new
+          cat packaging/debian/changelog >> packaging/debian/changelog.new
+          mv packaging/debian/changelog.new packaging/debian/changelog
+          
+          # Copy debian directory to root
+          cp -r packaging/debian .
+          
+          # Build the package
+          dpkg-buildpackage -b -rfakeroot -us -uc
+          
+          # Move the built package
+          mv ../waon_${VERSION}-1_amd64.deb ${{ matrix.artifact_name }}
+          
+        elif [ "${{ matrix.package_type }}" == "rpm" ]; then
+          # Build RPM package using spec file
+          mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+          
+          # Create tarball
+          tar czf ~/rpmbuild/SOURCES/waon-${VERSION}.tar.gz --transform "s,^,waon-${VERSION}/," --exclude='.git*' --exclude='build*' *
+          
+          # Update spec file with version
+          sed "s/Version:.*/Version: ${VERSION}/" packaging/rpm/waon.spec > ~/rpmbuild/SPECS/waon.spec
+          
+          # Build RPM
+          rpmbuild -ba ~/rpmbuild/SPECS/waon.spec
+          
+          # Copy the built package
+          cp ~/rpmbuild/RPMS/x86_64/waon-${VERSION}-1*.x86_64.rpm ${{ matrix.artifact_name }}
+          
+        elif [ "${{ matrix.package_type }}" == "arch" ]; then
+          # Build Arch package using Docker
+          cat > build-arch.sh << 'EOF'
+          #!/bin/bash
+          set -e
+          
+          # Update and install dependencies
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm base-devel cmake fftw libsndfile libao libsamplerate gtk2 ncurses python pybind11 python-numpy
+          
+          # Create build user
+          useradd -m builder
+          echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+          
+          # Copy source
+          cp -r /src /home/builder/waon
+          chown -R builder:builder /home/builder/waon
+          
+          # Build package
+          cd /home/builder/waon
+          sed -i "s/pkgver=.*/pkgver=${VERSION}/" packaging/arch/PKGBUILD
+          sed -i 's/source=.*/source=()/' packaging/arch/PKGBUILD
+          
+          su builder -c "cd packaging/arch && makepkg -s --noconfirm"
+          
+          # Copy result
+          cp packaging/arch/*.pkg.tar.zst /output/
+          EOF
+          
+          chmod +x build-arch.sh
+          
+          # Run build in Arch container
+          docker run --rm -v $(pwd):/src -v $(pwd):/output -e VERSION=${VERSION} archlinux:latest /src/build-arch.sh
+          
+          # Move the built package
+          mv waon-${VERSION}-1-x86_64.pkg.tar.zst ${{ matrix.artifact_name }}
+          
+        elif [ "${{ matrix.package_type }}" == "macos" ]; then
+          # Build macOS DMG
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIB=OFF
+          cmake --build build
+          
+          # Create app bundle
+          mkdir -p WaoN.app/Contents/{MacOS,Resources}
+          cp build/waon WaoN.app/Contents/MacOS/
+          cp build/pv WaoN.app/Contents/MacOS/
+          cp build/gwaon WaoN.app/Contents/MacOS/ || true
+          
+          # Use existing Info.plist or create a basic one
+          if [ -f packaging/macos/Info.plist ]; then
+            cp packaging/macos/Info.plist WaoN.app/Contents/
+          else
+            cat > WaoN.app/Contents/Info.plist << 'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleExecutable</key>
+    <string>waon</string>
+    <key>CFBundleIdentifier</key>
+    <string>net.sourceforge.waon</string>
+    <key>CFBundleName</key>
+    <string>WaoN</string>
+    <key>CFBundleShortVersionString</key>
+    <string>${VERSION}</string>
+    <key>CFBundleVersion</key>
+    <string>${VERSION}</string>
+</dict>
+</plist>
+PLIST
+          fi
+          
+          # Create DMG
+          create-dmg \
+            --volname "WaoN ${VERSION}" \
+            --window-pos 200 120 \
+            --window-size 600 400 \
+            --icon-size 100 \
+            --app-drop-link 450 185 \
+            "${{ matrix.artifact_name }}" \
+            "WaoN.app"
+            
+        elif [ "${{ matrix.package_type }}" == "windows" ]; then
+          # Build Windows installer
+          cmake -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+          
+          # Create installer with NSIS
+          makensis -DVERSION=${VERSION} packaging/windows/waon.nsi
+          mv packaging/windows/WaoN-*-setup.exe ${{ matrix.artifact_name }}
+        fi
+      shell: bash
+
+    - name: Upload Release Asset
+      uses: ncipollo/release-action@v1
+      with:
+        allowUpdates: true
+        updateOnlyUnreleased: true
+        artifacts: ${{ matrix.artifact_name }}
+        artifactContentType: application/octet-stream
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+  build-source:
+    name: Build source tarball
+    needs: create-release
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+
+    - name: Create source tarball
+      env:
+        VERSION: ${{ needs.create-release.outputs.version }}
+      run: |
+        # Create source distribution
+        mkdir -p waon-${VERSION}
+        rsync -av --exclude='.git*' --exclude='build*' --exclude='*.o' --exclude='*.so' . waon-${VERSION}/
+        tar czf waon-${VERSION}.tar.gz waon-${VERSION}
+        tar cJf waon-${VERSION}.tar.xz waon-${VERSION}
+
+    - name: Upload source tarballs
+      uses: ncipollo/release-action@v1
+      with:
+        allowUpdates: true
+        updateOnlyUnreleased: true
+        artifacts: "waon-${{ needs.create-release.outputs.version }}.tar.gz,waon-${{ needs.create-release.outputs.version }}.tar.xz"
+        artifactContentType: application/gzip
+        token: ${{ secrets.GITHUB_TOKEN }}
