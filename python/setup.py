@@ -7,10 +7,16 @@ import sys
 
 # Read long description from README if it exists
 long_description = ""
-readme_path = os.path.join(os.path.dirname(__file__), "../README.md")
-if os.path.exists(readme_path):
-    with open(readme_path, "r", encoding="utf-8") as f:
-        long_description = f.read()
+# Try parent directory first, then current directory
+readme_paths = [
+    os.path.join(os.path.dirname(__file__), "../README.md"),
+    os.path.join(os.path.dirname(__file__), "README.md")
+]
+for readme_path in readme_paths:
+    if os.path.exists(readme_path):
+        with open(readme_path, "r", encoding="utf-8") as f:
+            long_description = f.read()
+        break
 
 setup(
     name="waon",
