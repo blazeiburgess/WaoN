@@ -66,7 +66,11 @@ allowing Python programs to transcribe audio files to MIDI.
     -DBUILD_PV=ON \
     -DBUILD_GWAON=ON \
     -DBUILD_SHARED_LIB=ON \
-    -DBUILD_PYTHON_BINDINGS=ON
+    -DBUILD_PYTHON_BINDINGS=ON \
+    -DCMAKE_SKIP_BUILD_RPATH=OFF \
+    -DCMAKE_BUILD_WITH_INSTALL_RPATH=OFF \
+    -DCMAKE_INSTALL_RPATH="" \
+    -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=FALSE
 
 %cmake_build
 
@@ -76,19 +80,10 @@ allowing Python programs to transcribe audio files to MIDI.
 # Install Python module using CMake-configured setup.py
 # Copy README.md to avoid path access issues
 cp README.md %{_vpath_builddir}/
-# The extension is already built in the correct location by CMake
-# Debug: List contents to verify structure
-echo "Contents of build directory:"
-ls -la %{_vpath_builddir}/python/
-echo "Contents of waon directory:"
-ls -la %{_vpath_builddir}/python/waon/ || echo "waon directory not found"
 # Build and install Python module
 cd %{_vpath_builddir}/python
 %py3_build
 %py3_install
-# Debug: Check what was installed
-echo "Checking installed files:"
-find %{buildroot}%{python3_sitearch} -name "waon*" -ls || echo "No waon files found in sitearch"
 cd ../..
 
 # Install man pages
@@ -118,8 +113,8 @@ install -m 644 docs/man/gwaon.1 %{buildroot}%{_mandir}/man1/
 %files -n python3-waon
 %license LICENSE
 %doc python/README.md
-%{python3_sitearch}/waon/
-%{python3_sitearch}/waon-*.egg-info/
+%{python3_sitelib}/waon/
+%{python3_sitelib}/waon-*.egg-info/
 
 %changelog
 * Mon Jan 01 2024 WaoN Development Team <kichiki@users.sourceforge.net> - 0.11-1
