@@ -34,8 +34,8 @@ sed -i "s/pkgver=.*/pkgver=${VERSION}/" packaging/arch/PKGBUILD
 # Remove source and sha256sums since we're building from local files
 sed -i 's/source=.*/source=()/' packaging/arch/PKGBUILD
 sed -i 's/sha256sums=.*/sha256sums=()/' packaging/arch/PKGBUILD
-# Fix the source directory paths to use local directory instead of extracted tarball
-sed -i 's|cd "$srcdir/WaoN-$pkgver"|cd "/home/builder/waon"|g' packaging/arch/PKGBUILD
+# Fix all source directory paths to use local directory instead of extracted tarball
+sed -i 's|$srcdir/WaoN-$pkgver|/home/builder/waon|g' packaging/arch/PKGBUILD
 
 # Build package as builder user
 echo "Building package..."
