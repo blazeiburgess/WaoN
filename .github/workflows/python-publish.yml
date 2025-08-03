@@ -1,0 +1,191 @@
+name: Publish Python Package
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+
+jobs:
+  build-wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        # Temporarily disable Windows until dependencies are sorted out
+        # os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ['cp38', 'cp39', 'cp310', 'cp311', 'cp312']
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: |
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          sudo apt-get update
+          sudo apt-get install -y libfftw3-dev libsndfile1-dev libao-dev libsamplerate0-dev libgtk2.0-dev libncurses5-dev python3-dev
+        elif [ "$RUNNER_OS" == "macOS" ]; then
+          brew install fftw libsndfile libao libsamplerate gtk+ ncurses
+        elif [ "$RUNNER_OS" == "Windows" ]; then
+          # Windows dependencies handled by cibuildwheel
+          echo "Windows dependencies will be handled by cibuildwheel"
+        fi
+      shell: bash
+
+    - name: Build wheels
+      uses: pypa/cibuildwheel@v2.16.2
+      env:
+        CIBW_BUILD: ${{ matrix.python-version }}-*
+        CIBW_SKIP: "*-musllinux_* pp*"
+        CIBW_BEFORE_ALL_LINUX: |
+          yum install -y fftw3-devel libsndfile-devel ao-devel libsamplerate-devel gtk2-devel ncurses-devel || \
+          apt-get update && apt-get install -y libfftw3-dev libsndfile1-dev libao-dev libsamplerate0-dev libgtk2.0-dev libncurses5-dev
+        CIBW_BEFORE_ALL_MACOS: |
+          brew install fftw libsndfile libao libsamplerate gtk+ ncurses
+        CIBW_BEFORE_BUILD: |
+          pip install numpy pybind11
+          # Get pybind11 cmake directory
+          export pybind11_DIR=$(python -c "import pybind11; print(pybind11.get_cmake_dir())")
+          # Set Python executable
+          export PYTHON_EXECUTABLE=$(which python)
+          # Set CMAKE_PREFIX_PATH to help find the correct Python
+          export CMAKE_PREFIX_PATH="${pythonLocation}:${CMAKE_PREFIX_PATH}"
+          # Configure with proper Python detection
+          cmake -B build -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_SHARED_LIB=ON \
+            -DBUILD_PYTHON_BINDINGS=ON \
+            -DBUILD_WAON=OFF \
+            -DBUILD_PV=OFF \
+            -DBUILD_GWAON=OFF \
+            -DPython_EXECUTABLE="${PYTHON_EXECUTABLE}" \
+            -DPython_ROOT_DIR="${pythonLocation}" \
+            -DCMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH}" \
+            -Dpybind11_DIR="${pybind11_DIR}"
+          cmake --build build --config Release
+          # Install the Python module from the build directory
+          cd build/python && pip install -e .
+        CIBW_BUILD_VERBOSITY: 1
+        CIBW_TEST_REQUIRES: pytest numpy soundfile
+        CIBW_TEST_COMMAND: |
+          python -c "import waon; print(f'WaoN version: {waon.version_string()}')"
+          python -c "import waon; t = waon.Transcriber(); print('Transcriber test passed')"
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+        path: ./wheelhouse/*.whl
+
+  build-sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build
+
+    - name: Build sdist
+      run: |
+        cd python
+        python -m build --sdist
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: cibw-sdist
+        path: python/dist/*.tar.gz
+
+  test-packages:
+    name: Test packages
+    needs: [build-wheels, build-sdist]
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: dist
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libfftw3-dev libsndfile1-dev libao-dev libsamplerate0-dev libgtk2.0-dev libncurses5-dev python3-dev
+
+    - name: Test installation
+      run: |
+        # Find and install a wheel
+        WHEEL=$(find dist -name "*cp311*linux*.whl" | head -1)
+        pip install "$WHEEL"
+        
+        # Test import and basic functionality
+        python -c "import waon; print(f'WaoN version: {waon.version_string()}')"
+        python python/examples/numpy_transcription.py test_output.mid
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs: [test-packages]
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/waon
+    permissions:
+      id-token: write
+
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: dist
+
+    - name: Merge artifacts
+      run: |
+        mkdir upload
+        find dist -name "*.whl" -o -name "*.tar.gz" | xargs -I {} cp {} upload/
+
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        packages-dir: upload/
+        skip-existing: true
+
+  publish-test-pypi:
+    name: Publish to Test PyPI
+    needs: [build-wheels, build-sdist]
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/waon
+    permissions:
+      id-token: write
+
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: dist
+
+    - name: Merge artifacts
+      run: |
+        mkdir upload
+        find dist -name "*.whl" -o -name "*.tar.gz" | xargs -I {} cp {} upload/
+
+    - name: Publish to Test PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        repository-url: https://test.pypi.org/legacy/
+        packages-dir: upload/
+        skip-existing: true
