@@ -154,37 +154,11 @@ jobs:
           
         elif [ "${{ matrix.package_type }}" == "arch" ]; then
           # Build Arch package using Docker
-          cat > build-arch.sh << 'EOF'
-#!/bin/bash
-set -e
-
-# Update and install dependencies
-pacman -Syu --noconfirm
-pacman -S --noconfirm base-devel cmake fftw libsndfile libao libsamplerate gtk2 ncurses python pybind11 python-numpy
-
-# Create build user
-useradd -m builder
-echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-
-# Copy source
-cp -r /src /home/builder/waon
-chown -R builder:builder /home/builder/waon
-
-# Build package
-cd /home/builder/waon
-sed -i "s/pkgver=.*/pkgver=${VERSION}/" packaging/arch/PKGBUILD
-sed -i 's/source=.*/source=()/' packaging/arch/PKGBUILD
-
-su builder -c "cd packaging/arch && makepkg -s --noconfirm"
-
-# Copy result
-cp packaging/arch/*.pkg.tar.zst /output/
-EOF
-          
-          chmod +x build-arch.sh
+          # Make sure the build script is executable
+          chmod +x scripts/build-arch-docker.sh
           
           # Run build in Arch container
-          docker run --rm -v $(pwd):/src -v $(pwd):/output -e VERSION=${VERSION} archlinux:latest /src/build-arch.sh
+          docker run --rm -v $(pwd):/src -v $(pwd):/output -e VERSION=${VERSION} archlinux:latest /src/scripts/build-arch-docker.sh
           
           # Move the built package
           mv waon-${VERSION}-1-x86_64.pkg.tar.zst ${{ matrix.artifact_name }}
