@@ -25,7 +25,7 @@ setup(
     author_email="kichiki@users.sourceforge.net",
     description="Python bindings for WaoN - Wave-to-Notes transcriber",
     long_description=long_description,
-    long_description_content_type="text/markdown",
+    long_description_content_type="text/markdown" if long_description else None,
     url="https://github.com/blazeiburgess/WaoN",
     packages=find_packages(),
     package_data={
