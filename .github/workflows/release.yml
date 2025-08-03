@@ -155,8 +155,10 @@ jobs:
           # Run build in Arch container
           docker run --rm -v $(pwd):/src -v $(pwd):/output -e VERSION=${VERSION} archlinux:latest /src/scripts/build-arch-docker.sh
           
-          # Move the built package
-          mv waon-${VERSION}-1-x86_64.pkg.tar.zst ${{ matrix.artifact_name }}
+          # Move the built package if it's not already in place
+          if [ "waon-${VERSION}-1-x86_64.pkg.tar.zst" != "${{ matrix.artifact_name }}" ]; then
+            mv waon-${VERSION}-1-x86_64.pkg.tar.zst ${{ matrix.artifact_name }}
+          fi
           
         elif [ "${{ matrix.package_type }}" == "macos" ]; then
           # Build macOS DMG
