@@ -227,7 +227,6 @@ void pv_conventional (const char *file, const char *outfile,
 
 
   // prepare the output
-  int status;
   ao_device *ao = NULL;
   SNDFILE *sfout = NULL;
   SF_INFO sfout_info;
@@ -426,8 +425,8 @@ void pv_conventional (const char *file, const char *outfile,
 
 
       // output
-      status = pv_play_resample (hop_res, hop_syn, l_out, r_out,
-				 ao, sfout, &sfout_info);
+      pv_play_resample (hop_res, hop_syn, l_out, r_out,
+			ao, sfout, &sfout_info);
 
 
       /* shift acc_out by hop_syn */
@@ -471,7 +470,7 @@ void pv_conventional (const char *file, const char *outfile,
   else
     {
       // frames left in l_out[] and r_out[]
-      status = sndfile_write (sfout, sfout_info, l_out, r_out, len);
+      sndfile_write (sfout, sfout_info, l_out, r_out, len);
       sf_write_sync (sfout);
       sf_close (sfout);
     }
