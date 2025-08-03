@@ -41,6 +41,10 @@ sed -i 's|$srcdir/WaoN-$pkgver|/home/builder/waon|g' packaging/arch/PKGBUILD
 echo "Replacing version placeholder in setup.py..."
 sed -i "s/@PROJECT_VERSION@/${VERSION}/" python/setup.py
 
+# Copy README.md to python directory to avoid access issues
+echo "Copying README.md to avoid path access issues..."
+cp README.md python/
+
 # Build package as builder user
 echo "Building package..."
 su builder -c "cd packaging/arch && makepkg -s --noconfirm"
