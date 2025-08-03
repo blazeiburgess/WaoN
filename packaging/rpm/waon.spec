@@ -76,6 +76,8 @@ allowing Python programs to transcribe audio files to MIDI.
 # Install Python module using CMake-configured setup.py
 # Copy README.md to avoid path access issues
 cp README.md %{_vpath_builddir}/
+# The extension is already built in the correct location by CMake
+# Just ensure the waon package directory has all necessary files
 cd %{_vpath_builddir}/python
 %py3_install
 cd ../..
