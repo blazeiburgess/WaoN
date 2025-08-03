@@ -103,9 +103,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y rpm libfftw3-dev libsndfile1-dev libao-dev libsamplerate0-dev libgtk2.0-dev libncurses5-dev
         elif [ "${{ matrix.package_type }}" == "arch" ]; then
-          # For Arch, we'll use a Docker container
-          sudo apt-get update
-          sudo apt-get install -y docker.io
+          echo "Using pre-installed Docker"
         elif [ "${{ matrix.package_type }}" == "macos" ]; then
           brew install fftw libsndfile libao libsamplerate gtk+ ncurses create-dmg
         elif [ "${{ matrix.package_type }}" == "windows" ]; then
