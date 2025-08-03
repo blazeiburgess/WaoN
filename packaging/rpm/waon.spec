@@ -19,6 +19,7 @@ BuildRequires:  ncurses-devel
 BuildRequires:  python3-devel
 BuildRequires:  pybind11-devel
 BuildRequires:  python3-numpy
+BuildRequires:  chrpath
 
 Requires:       fftw3
 Requires:       libsndfile
