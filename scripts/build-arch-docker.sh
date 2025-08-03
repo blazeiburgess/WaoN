@@ -15,7 +15,7 @@ echo "Building Arch package for version ${VERSION}"
 # Update system and install dependencies
 echo "Updating system and installing dependencies..."
 pacman -Syu --noconfirm
-pacman -S --noconfirm base-devel cmake fftw libsndfile libao libsamplerate gtk2 ncurses python pybind11 python-numpy
+pacman -S --noconfirm base-devel cmake fftw libsndfile libao libsamplerate gtk2 ncurses python pybind11 python-numpy python-setuptools
 
 # Create build user (makepkg doesn't run as root)
 echo "Creating build user..."
