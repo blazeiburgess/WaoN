@@ -52,6 +52,7 @@ configure_file(waon/__init__.py ${CMAKE_CURRENT_BINARY_DIR}/waon/__init__.py COP
 configure_file(setup.py ${CMAKE_CURRENT_BINARY_DIR}/setup.py @ONLY)
 
 # Installation
-install(TARGETS _waon
-    LIBRARY DESTINATION ${Python_SITELIB}/waon
-)
+# Let setup.py handle the installation for proper PyPI compatibility
+# install(TARGETS _waon
+#     LIBRARY DESTINATION ${Python_SITELIB}/waon
+# )
