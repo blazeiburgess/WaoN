@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
 project(WaoN VERSION 0.10 LANGUAGES C CXX)
 
+# Include GNUInstallDirs for proper install directories
+include(GNUInstallDirs)
+
 # Set C standard
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
