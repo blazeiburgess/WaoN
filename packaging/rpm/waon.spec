@@ -77,9 +77,18 @@ allowing Python programs to transcribe audio files to MIDI.
 # Copy README.md to avoid path access issues
 cp README.md %{_vpath_builddir}/
 # The extension is already built in the correct location by CMake
-# Just ensure the waon package directory has all necessary files
+# Debug: List contents to verify structure
+echo "Contents of build directory:"
+ls -la %{_vpath_builddir}/python/
+echo "Contents of waon directory:"
+ls -la %{_vpath_builddir}/python/waon/ || echo "waon directory not found"
+# Build and install Python module
 cd %{_vpath_builddir}/python
+%py3_build
 %py3_install
+# Debug: Check what was installed
+echo "Checking installed files:"
+find %{buildroot}%{python3_sitearch} -name "waon*" -ls || echo "No waon files found in sitearch"
 cd ../..
 
 # Install man pages
