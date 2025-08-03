@@ -37,6 +37,10 @@ sed -i 's/sha256sums=.*/sha256sums=()/' packaging/arch/PKGBUILD
 # Fix all source directory paths to use local directory instead of extracted tarball
 sed -i 's|$srcdir/WaoN-$pkgver|/home/builder/waon|g' packaging/arch/PKGBUILD
 
+# Replace version placeholder in setup.py
+echo "Replacing version placeholder in setup.py..."
+sed -i "s/@PROJECT_VERSION@/${VERSION}/" python/setup.py
+
 # Build package as builder user
 echo "Building package..."
 su builder -c "cd packaging/arch && makepkg -s --noconfirm"
