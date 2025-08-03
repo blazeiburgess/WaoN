@@ -304,12 +304,12 @@ endif()
 
 if(INSTALL_TARGETS)
     install(TARGETS ${INSTALL_TARGETS}
-        RUNTIME DESTINATION bin
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
 endif()
 
 install(FILES docs/man/waon.1 docs/man/pv.1 docs/man/gwaon.1
-    DESTINATION share/man/man1
+    DESTINATION ${CMAKE_INSTALL_MANDIR}/man1
 )
 
 # Print build configuration
