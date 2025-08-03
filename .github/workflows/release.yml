@@ -144,8 +144,8 @@ jobs:
           # Run build in Fedora container
           docker run --rm -v $(pwd):/src -v $(pwd):/output -e VERSION=${VERSION} fedora:39 /src/scripts/build-rpm-docker.sh
           
-          # Move the built package
-          mv waon-${VERSION}-1.x86_64.rpm ${{ matrix.artifact_name }}
+          # Move the built package (use wildcard to handle distribution tags like .fc39)
+          mv waon-${VERSION}-1*.x86_64.rpm ${{ matrix.artifact_name }}
           
         elif [ "${{ matrix.package_type }}" == "arch" ]; then
           # Build Arch package using Docker
