@@ -64,6 +64,7 @@ jobs:
         bodyFile: CHANGELOG_FORMATTED.md
         draft: false
         prerelease: false
+        allowUpdates: true
         token: ${{ secrets.GITHUB_TOKEN }}
 
   build-packages:
