@@ -86,6 +86,9 @@ cd %{_vpath_builddir}/python
 %py3_install
 cd ../..
 
+# Strip RPATH from Python extension to fix security issue
+chrpath -d %{buildroot}%{python3_sitelib}/waon/_waon*.so || true
+
 # Install man pages
 mkdir -p %{buildroot}%{_mandir}/man1
 install -m 644 docs/man/waon.1 %{buildroot}%{_mandir}/man1/
