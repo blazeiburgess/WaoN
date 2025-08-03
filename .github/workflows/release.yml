@@ -180,7 +180,7 @@ jobs:
           
           # Copy result
           cp packaging/arch/*.pkg.tar.zst /output/
-          EOF
+        EOF
           
           chmod +x build-arch.sh
           
@@ -205,24 +205,24 @@ jobs:
           if [ -f packaging/macos/Info.plist ]; then
             cp packaging/macos/Info.plist WaoN.app/Contents/
           else
-            cat > WaoN.app/Contents/Info.plist << 'PLIST'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>CFBundleExecutable</key>
-    <string>waon</string>
-    <key>CFBundleIdentifier</key>
-    <string>net.sourceforge.waon</string>
-    <key>CFBundleName</key>
-    <string>WaoN</string>
-    <key>CFBundleShortVersionString</key>
-    <string>${VERSION}</string>
-    <key>CFBundleVersion</key>
-    <string>${VERSION}</string>
-</dict>
-</plist>
-PLIST
+            # Create minimal Info.plist
+            mkdir -p WaoN.app/Contents
+            echo '<?xml version="1.0" encoding="UTF-8"?>' > WaoN.app/Contents/Info.plist
+            echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' >> WaoN.app/Contents/Info.plist
+            echo '<plist version="1.0">' >> WaoN.app/Contents/Info.plist
+            echo '<dict>' >> WaoN.app/Contents/Info.plist
+            echo '    <key>CFBundleExecutable</key>' >> WaoN.app/Contents/Info.plist
+            echo '    <string>waon</string>' >> WaoN.app/Contents/Info.plist
+            echo '    <key>CFBundleIdentifier</key>' >> WaoN.app/Contents/Info.plist
+            echo '    <string>net.sourceforge.waon</string>' >> WaoN.app/Contents/Info.plist
+            echo '    <key>CFBundleName</key>' >> WaoN.app/Contents/Info.plist
+            echo '    <string>WaoN</string>' >> WaoN.app/Contents/Info.plist
+            echo '    <key>CFBundleShortVersionString</key>' >> WaoN.app/Contents/Info.plist
+            echo "    <string>${VERSION}</string>" >> WaoN.app/Contents/Info.plist
+            echo '    <key>CFBundleVersion</key>' >> WaoN.app/Contents/Info.plist
+            echo "    <string>${VERSION}</string>" >> WaoN.app/Contents/Info.plist
+            echo '</dict>' >> WaoN.app/Contents/Info.plist
+            echo '</plist>' >> WaoN.app/Contents/Info.plist
           fi
           
           # Create DMG
