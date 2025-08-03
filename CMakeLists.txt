@@ -110,8 +110,8 @@ if(BUILD_SHARED_LIB)
     
     # Install library
     install(TARGETS waon
-        LIBRARY DESTINATION lib
-        PUBLIC_HEADER DESTINATION include
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     )
 endif()
 
