@@ -18,7 +18,7 @@ dnf install -y rpm-build rpmdevtools
 dnf install -y cmake gcc gcc-c++ make
 dnf install -y fftw3-devel libsndfile-devel libao-devel libsamplerate-devel
 dnf install -y gtk2-devel ncurses-devel
-dnf install -y python3-devel pybind11-devel python3-numpy
+dnf install -y python3-devel pybind11-devel python3-numpy chrpath
 
 # Set up RPM build environment
 echo "Setting up RPM build environment..."
