@@ -137,20 +137,15 @@ jobs:
           mv ../waon_${VERSION}-1_amd64.deb ${{ matrix.artifact_name }}
           
         elif [ "${{ matrix.package_type }}" == "rpm" ]; then
-          # Build RPM package using spec file
-          mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+          # Build RPM package using Docker
+          # Make sure the build script is executable
+          chmod +x scripts/build-rpm-docker.sh
           
-          # Create tarball
-          tar czf ~/rpmbuild/SOURCES/waon-${VERSION}.tar.gz --transform "s,^,waon-${VERSION}/," --exclude='.git*' --exclude='build*' *
+          # Run build in Fedora container
+          docker run --rm -v $(pwd):/src -v $(pwd):/output -e VERSION=${VERSION} fedora:39 /src/scripts/build-rpm-docker.sh
           
-          # Update spec file with version
-          sed "s/Version:.*/Version: ${VERSION}/" packaging/rpm/waon.spec > ~/rpmbuild/SPECS/waon.spec
-          
-          # Build RPM
-          rpmbuild -ba ~/rpmbuild/SPECS/waon.spec
-          
-          # Copy the built package
-          cp ~/rpmbuild/RPMS/x86_64/waon-${VERSION}-1*.x86_64.rpm ${{ matrix.artifact_name }}
+          # Move the built package
+          mv waon-${VERSION}-1.x86_64.rpm ${{ matrix.artifact_name }}
           
         elif [ "${{ matrix.package_type }}" == "arch" ]; then
           # Build Arch package using Docker
